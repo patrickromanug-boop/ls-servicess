@@ -84,12 +84,12 @@ export const jobsQueryOptions = () =>
 export const jobQueryOptions = (id: string) =>
   queryOptions({ queryKey: ["job", id], queryFn: () => fetchJobById(id), staleTime: 60_000 });
 
-export async function reportJob(input: { job_id: string; reason: string; details?: string }) {
+export async function reportJob(input: { job_id: string; reason: string; details: string | null }) {
   const { data: userData } = await supabase.auth.getUser();
   const { error } = await supabase.from("reported_jobs").insert({
     job_id: input.job_id,
     reason: input.reason,
-    details: input.details ?? null,
+    details: input.details,
     user_id: userData.user?.id ?? null,
   });
   if (error) throw error;

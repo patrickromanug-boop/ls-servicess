@@ -181,7 +181,7 @@ function ReportForm({ jobId, onClose }: { jobId: string; onClose: () => void }) 
     if (details.length > 500) return;
     setSaving(true);
     try {
-      await reportJob({ job_id: jobId, reason, details: details.trim() || undefined });
+      await reportJob({ job_id: jobId, reason, details: details.trim() || null });
       toast.success("Thank you — this job has been reported for review.");
       onClose();
     } catch {
