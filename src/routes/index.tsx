@@ -37,36 +37,76 @@ function Home() {
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex-1">
-        <section className="bg-brand text-brand-foreground">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:py-24">
-            <span className="bg-brand-foreground/15 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold">
-              <Sparkles className="size-3.5" />
-              Uganda&apos;s job portal
-            </span>
-            <h1 className="mt-5 max-w-3xl text-4xl leading-[1.05] font-bold sm:text-6xl">
-              Helping Ugandans find work — one honest listing at a time.
-            </h1>
-            <p className="text-brand-foreground/80 mt-5 max-w-xl text-base sm:text-lg">
-              Every open role in one place. Search, filter and apply through the official channel —
-              no middlemen, no fees to browse.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <a
-                href="#jobs"
-                className="bg-accent-orange text-accent-orange-foreground inline-flex items-center gap-2 rounded-lg px-6 py-3.5 text-sm font-bold"
-              >
-                Find work
-                <ArrowRight className="size-4" />
-              </a>
-              <Link
-                to="/hire-talent"
-                className="border-brand-foreground/30 hover:bg-brand-foreground/10 inline-flex items-center gap-2 rounded-lg border px-6 py-3.5 text-sm font-bold"
-              >
-                Hire talent
-              </Link>
+        <section className="bg-brand text-brand-foreground overflow-hidden">
+          <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 sm:py-24 lg:grid-cols-[1.15fr_1fr]">
+            <div>
+              <span className="bg-brand-foreground/15 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold">
+                <Sparkles className="size-3.5" />
+                Uganda&apos;s job portal
+              </span>
+              <h1 className="mt-5 text-4xl leading-[1.05] font-bold sm:text-6xl">
+                Helping Ugandans find work — one honest listing at a time.
+              </h1>
+              <p className="text-brand-foreground/80 mt-5 max-w-xl text-base sm:text-lg">
+                Every open role in one place. Search, filter and apply through the official channel —
+                no middlemen, no fees to browse.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <a
+                  href="#jobs"
+                  className="bg-accent-orange text-accent-orange-foreground inline-flex items-center gap-2 rounded-lg px-6 py-3.5 text-sm font-bold"
+                >
+                  Find work
+                  <ArrowRight className="size-4" />
+                </a>
+                <Link
+                  to="/hire-talent"
+                  className="border-brand-foreground/30 hover:bg-brand-foreground/10 inline-flex items-center gap-2 rounded-lg border px-6 py-3.5 text-sm font-bold"
+                >
+                  Hire talent
+                </Link>
+              </div>
+            </div>
+
+            <div className="border-brand-foreground/15 bg-brand-foreground/8 hidden rounded-2xl border p-7 lg:block">
+              <p className="text-brand-foreground/60 text-xs font-bold tracking-widest">
+                WHY LS SERVICES
+              </p>
+              <ul className="mt-5 space-y-5">
+                {[
+                  {
+                    icon: <ShieldCheck className="size-4" />,
+                    title: "Apply on the official site",
+                    body: "Every listing links to the employer's own channel. No fees, no middlemen.",
+                  },
+                  {
+                    icon: <Briefcase className="size-4" />,
+                    title: "Deadlines you can see",
+                    body: "Each role shows the days left, so nothing expires quietly on you.",
+                  },
+                  {
+                    icon: <Sparkles className="size-4" />,
+                    title: "Built for any phone",
+                    body: "Fast search and filters that work on low data and small screens.",
+                  },
+                ].map((item) => (
+                  <li key={item.title} className="flex gap-3.5">
+                    <span className="bg-accent-orange text-accent-orange-foreground grid size-8 shrink-0 place-items-center rounded-lg">
+                      {item.icon}
+                    </span>
+                    <div>
+                      <p className="text-sm font-bold">{item.title}</p>
+                      <p className="text-brand-foreground/70 mt-1 text-sm leading-relaxed">
+                        {item.body}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </section>
+
 
         <section id="jobs" className="mx-auto max-w-3xl scroll-mt-20 px-4 py-14">
           <h2 className="text-2xl font-bold">Open jobs</h2>
