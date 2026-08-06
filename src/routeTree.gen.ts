@@ -14,6 +14,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as HireTalentRouteImport } from './routes/hire-talent'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
@@ -45,6 +46,11 @@ const HireTalentRoute = HireTalentRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RefundPolicyRoute = RefundPolicyRouteImport.update({
+  id: '/refund-policy',
+  path: '/refund-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -89,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/hire-talent': typeof HireTalentRoute
   '/privacy': typeof PrivacyRoute
+  '/refund-policy': typeof RefundPolicyRoute
   '/terms': typeof TermsRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/hire-talent': typeof HireTalentRoute
   '/privacy': typeof PrivacyRoute
+  '/refund-policy': typeof RefundPolicyRoute
   '/terms': typeof TermsRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/hire-talent': typeof HireTalentRoute
   '/privacy': typeof PrivacyRoute
+  '/refund-policy': typeof RefundPolicyRoute
   '/terms': typeof TermsRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
@@ -134,6 +143,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/hire-talent'
     | '/privacy'
+    | '/refund-policy'
     | '/terms'
     | '/auth/forgot-password'
     | '/auth/login'
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/hire-talent'
     | '/privacy'
+    | '/refund-policy'
     | '/terms'
     | '/auth/forgot-password'
     | '/auth/login'
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/hire-talent'
     | '/privacy'
+    | '/refund-policy'
     | '/terms'
     | '/auth/forgot-password'
     | '/auth/login'
@@ -177,6 +189,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   HireTalentRoute: typeof HireTalentRoute
   PrivacyRoute: typeof PrivacyRoute
+  RefundPolicyRoute: typeof RefundPolicyRoute
   TermsRoute: typeof TermsRoute
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthLoginRoute: typeof AuthLoginRoute
@@ -221,6 +234,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/refund-policy': {
+      id: '/refund-policy'
+      path: '/refund-policy'
+      fullPath: '/refund-policy'
+      preLoaderRoute: typeof RefundPolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -281,6 +301,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   HireTalentRoute: HireTalentRoute,
   PrivacyRoute: PrivacyRoute,
+  RefundPolicyRoute: RefundPolicyRoute,
   TermsRoute: TermsRoute,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthLoginRoute: AuthLoginRoute,
