@@ -79,14 +79,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "LS Services — Find Jobs in Uganda" },
+      {
+        name: "description",
+        content:
+          "LS Services helps Ugandans find work. Browse verified job openings, filter by category and location, and apply through official links.",
+      },
+      { name: "author", content: "LS Services" },
+      { property: "og:title", content: "LS Services — Find Jobs in Uganda" },
+      {
+        property: "og:description",
+        content: "Browse job openings across Uganda and apply through official links.",
+      },
+      { property: "og:site_name", content: "LS Services" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
