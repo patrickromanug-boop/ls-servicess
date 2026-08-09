@@ -10,6 +10,9 @@ export type JobRow = {
   other_details: string | null;
   deadline: string;
   official_link: string | null;
+  application_method: string | null;
+  application_instructions: string | null;
+  application_email: string | null;
   views_count: number;
   status: string;
   created_at: string;
@@ -19,7 +22,7 @@ export type JobRow = {
 };
 
 const SELECT =
-  "id,title,organization,purpose,requirements,other_details,deadline,official_link,views_count,status,created_at,categories(name),locations(name),job_types(name)";
+  "id,title,organization,purpose,requirements,other_details,deadline,official_link,application_method,application_instructions,application_email,views_count,status,created_at,categories(name),locations(name),job_types(name)";
 
 export function slugify(value: string) {
   return value
