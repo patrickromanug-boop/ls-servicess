@@ -21,8 +21,21 @@ export type JobRow = {
   job_types: { name: string } | null;
 };
 
-const SELECT =
-  "id,title,organization,purpose,requirements,other_details,deadline,official_link,application_method,application_instructions,application_email,views_count,status,created_at,categories(name),locations(name),job_types(name)";
+const BASE_COLUMNS =
+  "id,title,organization,purpose,requirements,other_details,deadline,official_link,application_method,views_count,status,created_at,categories(name),locations(name),job_types(name)";
+
+/**
+ * application_instructions / application_email are newer admin columns. Until the
+ * SQL migration has been run on the shared Supabase project, PostgREST answers
+ * 42703 ("column does not exist"); we then retry without them so the site still
+ * renders instead of blank-screening.
+ */
+const APPLY_COLUMNS = "application_instructions,application_email";
+const SELECT = `${BASE_COLUMNS},${APPLY_COLUMNS}`;
+
+function isMissingColumn(error: { code?: string } | null) {
+  return error?.code === "42703";
+}
 
 export function slugify(value: string) {
   return value
@@ -65,18 +78,26 @@ export function initialsOf(organization: string) {
 }
 
 export async function fetchJobs(): Promise<JobRow[]> {
-  const { data, error } = await supabase
-    .from("jobs")
-    .select(SELECT)
-    .eq("status", "active")
-    .order("created_at", { ascending: false })
-    .limit(300);
+  const query = (columns: string) =>
+    supabase
+      .from("jobs")
+      .select(columns)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(300);
+
+  let { data, error } = await query(SELECT);
+  if (isMissingColumn(error)) ({ data, error } = await query(BASE_COLUMNS));
   if (error) throw error;
   return (data ?? []) as unknown as JobRow[];
 }
 
 export async function fetchJobById(id: string): Promise<JobRow | null> {
-  const { data, error } = await supabase.from("jobs").select(SELECT).eq("id", id).maybeSingle();
+  const query = (columns: string) =>
+    supabase.from("jobs").select(columns).eq("id", id).maybeSingle();
+
+  let { data, error } = await query(SELECT);
+  if (isMissingColumn(error)) ({ data, error } = await query(BASE_COLUMNS));
   if (error) throw error;
   return (data as unknown as JobRow) ?? null;
 }
