@@ -133,6 +133,69 @@ export function JobDetail({ job }: { job: JobRow }) {
   );
 }
 
+/**
+ * Inline application procedure — the ONLY path to the official link or the
+ * email action. "Apply" never jumps straight out to official_link.
+ */
+function ApplyProcedure({ job }: { job: JobRow }) {
+  const emailOnly = job.application_method === "email_only";
+  const instructions = job.application_instructions?.trim();
+
+  const mailto = job.application_email?.trim()
+    ? `mailto:${job.application_email.trim()}?subject=${encodeURIComponent(
+        `Application: ${job.title} — ${job.organization}`,
+      )}`
+    : null;
+
+  return (
+    <div className="border-brand bg-brand-soft mt-4 rounded-xl border p-4">
+      <p className="text-sm font-semibold">How to apply</p>
+
+      {instructions ? (
+        <p className="text-foreground/80 mt-2 whitespace-pre-line text-sm leading-relaxed">{instructions}</p>
+      ) : (
+        <p className="text-muted-foreground mt-2 text-sm">
+          {emailOnly
+            ? "Follow the email option below to send your application."
+            : "Click below to apply on the official site"}
+        </p>
+      )}
+
+      {emailOnly ? (
+        mailto ? (
+          <a
+            href={mailto}
+            className="bg-brand text-brand-foreground mt-3 inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold"
+          >
+            <Mail className="size-4" />
+            Email your application
+          </a>
+        ) : (
+          <p className="text-muted-foreground mt-3 text-sm font-medium">
+            Contact LS Services for application details
+          </p>
+        )
+      ) : job.official_link ? (
+        <a
+          href={job.official_link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-brand text-brand-foreground mt-3 inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold"
+        >
+          Visit official site
+          <ExternalLink className="size-4" />
+        </a>
+      ) : (
+        <p className="text-muted-foreground mt-3 text-sm font-medium">
+          Contact LS Services for application details
+        </p>
+      )}
+    </div>
+  );
+}
+
+
+
 function Chip({ icon, text }: { icon?: React.ReactNode; text: string }) {
   return (
     <span className="bg-muted text-muted-foreground flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium">
