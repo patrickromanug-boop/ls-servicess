@@ -7,6 +7,7 @@ import {
   ExternalLink,
   Eye,
   Flag,
+  Mail,
   MapPin,
   Briefcase,
   Share2,
