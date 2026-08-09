@@ -93,6 +93,7 @@ export function JobDetail({ job }: { job: JobRow }) {
       <div className="border-border mt-8 flex flex-wrap items-center gap-2 border-t pt-6">
         <button
           onClick={handleApply}
+          aria-expanded={applyOpen}
           className="bg-brand text-brand-foreground rounded-lg px-5 py-3 text-sm font-semibold"
         >
           Apply Now
@@ -124,29 +125,8 @@ export function JobDetail({ job }: { job: JobRow }) {
         </button>
       </div>
 
-      {applyOpen && (
-        <div className="border-brand bg-brand-soft mt-4 rounded-xl border p-4">
-          <p className="text-sm font-semibold">Continue your application</p>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Applications for this job are handled on the organization&apos;s official platform.
-          </p>
-          {job.official_link ? (
-            <a
-              href={job.official_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-brand text-brand-foreground mt-3 inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold"
-            >
-              Apply on official site
-              <ExternalLink className="size-4" />
-            </a>
-          ) : (
-            <p className="text-muted-foreground mt-3 text-sm">
-              No official link was provided for this job yet.
-            </p>
-          )}
-        </div>
-      )}
+      {applyOpen && <ApplyProcedure job={job} />}
+
 
       {reportOpen && <ReportForm jobId={job.id} onClose={() => setReportOpen(false)} />}
     </article>
