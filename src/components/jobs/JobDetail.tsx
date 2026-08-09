@@ -7,6 +7,7 @@ import {
   ExternalLink,
   Eye,
   Flag,
+  Mail,
   MapPin,
   Briefcase,
   Share2,
@@ -37,7 +38,7 @@ export function JobDetail({ job }: { job: JobRow }) {
       navigate({ to: "/auth/login", search: { redirect: path } });
       return;
     }
-    setApplyOpen(true);
+    setApplyOpen((v) => !v);
   }
 
   async function handleShare() {
@@ -93,6 +94,7 @@ export function JobDetail({ job }: { job: JobRow }) {
       <div className="border-border mt-8 flex flex-wrap items-center gap-2 border-t pt-6">
         <button
           onClick={handleApply}
+          aria-expanded={applyOpen}
           className="bg-brand text-brand-foreground rounded-lg px-5 py-3 text-sm font-semibold"
         >
           Apply Now
@@ -124,34 +126,76 @@ export function JobDetail({ job }: { job: JobRow }) {
         </button>
       </div>
 
-      {applyOpen && (
-        <div className="border-brand bg-brand-soft mt-4 rounded-xl border p-4">
-          <p className="text-sm font-semibold">Continue your application</p>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Applications for this job are handled on the organization&apos;s official platform.
-          </p>
-          {job.official_link ? (
-            <a
-              href={job.official_link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-brand text-brand-foreground mt-3 inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold"
-            >
-              Apply on official site
-              <ExternalLink className="size-4" />
-            </a>
-          ) : (
-            <p className="text-muted-foreground mt-3 text-sm">
-              No official link was provided for this job yet.
-            </p>
-          )}
-        </div>
-      )}
+      {applyOpen && <ApplyProcedure job={job} />}
+
 
       {reportOpen && <ReportForm jobId={job.id} onClose={() => setReportOpen(false)} />}
     </article>
   );
 }
+
+/**
+ * Inline application procedure — the ONLY path to the official link or the
+ * email action. "Apply" never jumps straight out to official_link.
+ */
+function ApplyProcedure({ job }: { job: JobRow }) {
+  const emailOnly = job.application_method === "email_only";
+  const instructions = job.application_instructions?.trim();
+
+  const mailto = job.application_email?.trim()
+    ? `mailto:${job.application_email.trim()}?subject=${encodeURIComponent(
+        `Application: ${job.title} — ${job.organization}`,
+      )}`
+    : null;
+
+  return (
+    <div className="border-brand bg-brand-soft mt-4 rounded-xl border p-4">
+      <p className="text-sm font-semibold">How to apply</p>
+
+      {instructions ? (
+        <p className="text-foreground/80 mt-2 whitespace-pre-line text-sm leading-relaxed">{instructions}</p>
+      ) : (
+        <p className="text-muted-foreground mt-2 text-sm">
+          {emailOnly
+            ? "Follow the email option below to send your application."
+            : "Click below to apply on the official site"}
+        </p>
+      )}
+
+      {emailOnly ? (
+        mailto ? (
+          <a
+            href={mailto}
+            className="bg-brand text-brand-foreground mt-3 inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold"
+          >
+            <Mail className="size-4" />
+            Email your application
+          </a>
+        ) : (
+          <p className="text-muted-foreground mt-3 text-sm font-medium">
+            Contact LS Services for application details
+          </p>
+        )
+      ) : job.official_link ? (
+        <a
+          href={job.official_link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-brand text-brand-foreground mt-3 inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold"
+        >
+          Visit official site
+          <ExternalLink className="size-4" />
+        </a>
+      ) : (
+        <p className="text-muted-foreground mt-3 text-sm font-medium">
+          Contact LS Services for application details
+        </p>
+      )}
+    </div>
+  );
+}
+
+
 
 function Chip({ icon, text }: { icon?: React.ReactNode; text: string }) {
   return (
