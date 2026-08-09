@@ -46,7 +46,7 @@ export function Header() {
             </button>
           ) : (
             <Link
-              to="/auth/login"
+              to="/auth/login" search={{ redirect: undefined }}
               className="bg-brand text-brand-foreground ml-2 rounded-md px-4 py-2 text-sm font-semibold"
             >
               Sign in
@@ -79,7 +79,7 @@ export function Header() {
             </button>
           ) : (
             <Link
-              to="/auth/login"
+              to="/auth/login" search={{ redirect: undefined }}
               onClick={() => setOpen(false)}
               className="text-brand block px-2 py-2.5 text-sm font-semibold"
             >

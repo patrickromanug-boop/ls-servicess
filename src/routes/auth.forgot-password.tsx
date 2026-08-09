@@ -113,7 +113,7 @@ function ForgotPasswordPage() {
         )}
 
         <p className="text-muted-foreground mt-5 text-center text-sm">
-          <Link to="/auth/login" className="text-brand font-semibold">
+          <Link to="/auth/login" search={{ redirect: undefined }} className="text-brand font-semibold">
             Back to sign in
           </Link>
         </p>
