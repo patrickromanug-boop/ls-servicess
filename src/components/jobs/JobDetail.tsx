@@ -38,7 +38,7 @@ export function JobDetail({ job }: { job: JobRow }) {
       navigate({ to: "/auth/login", search: { redirect: path } });
       return;
     }
-    setApplyOpen(true);
+    setApplyOpen((v) => !v);
   }
 
   async function handleShare() {
