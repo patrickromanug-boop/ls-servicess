@@ -30,7 +30,7 @@ export function PlanSection({ sub }: { sub: WebSubscription | null }) {
               </p>
               <p className="text-muted-foreground mt-1 text-sm">
                 {plan
-                  ? `${plan.name} selected — ${plan.billingLabel ?? sub?.billing_cycle ?? ""} billing starts after the trial.`
+                  ? `${plan.name} selected — ${sub?.billing_cycle ?? "monthly"} billing starts after the trial.`
                   : "Unlimited document generations while your trial runs."}
               </p>
             </>
