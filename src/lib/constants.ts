@@ -21,3 +21,10 @@ export const WHATSAPP_WEB_DEV = wa(
 );
 
 export const WHATSAPP_CONTACT = (message: string) => wa(LS_ADMIN_WHATSAPP, message);
+
+/** Nudges the LS Services admin that a new document request is waiting. */
+export const WHATSAPP_DOCUMENT_REQUEST = (documentType: string) =>
+  wa(
+    LS_ADMIN_WHATSAPP,
+    `Hi, I've just submitted a ${documentType} request — please check the admin dashboard`,
+  );
