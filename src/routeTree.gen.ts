@@ -14,6 +14,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AccountDeletedRouteImport } from './routes/account-deleted'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as HireTalentRouteImport } from './routes/hire-talent'
+import { Route as PlansRouteImport } from './routes/plans'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
 import { Route as TermsRouteImport } from './routes/terms'
@@ -47,6 +48,11 @@ const ContactRoute = ContactRouteImport.update({
 const HireTalentRoute = HireTalentRouteImport.update({
   id: '/hire-talent',
   path: '/hire-talent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlansRoute = PlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/account-deleted': typeof AccountDeletedRoute
   '/contact': typeof ContactRoute
   '/hire-talent': typeof HireTalentRoute
+  '/plans': typeof PlansRoute
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/terms': typeof TermsRoute
@@ -117,6 +124,7 @@ export interface FileRoutesByTo {
   '/account-deleted': typeof AccountDeletedRoute
   '/contact': typeof ContactRoute
   '/hire-talent': typeof HireTalentRoute
+  '/plans': typeof PlansRoute
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/terms': typeof TermsRoute
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/account-deleted': typeof AccountDeletedRoute
   '/contact': typeof ContactRoute
   '/hire-talent': typeof HireTalentRoute
+  '/plans': typeof PlansRoute
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/terms': typeof TermsRoute
@@ -152,6 +161,7 @@ export interface FileRouteTypes {
     | '/account-deleted'
     | '/contact'
     | '/hire-talent'
+    | '/plans'
     | '/privacy'
     | '/refund-policy'
     | '/terms'
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
     | '/account-deleted'
     | '/contact'
     | '/hire-talent'
+    | '/plans'
     | '/privacy'
     | '/refund-policy'
     | '/terms'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/account-deleted'
     | '/contact'
     | '/hire-talent'
+    | '/plans'
     | '/privacy'
     | '/refund-policy'
     | '/terms'
@@ -201,6 +213,7 @@ export interface RootRouteChildren {
   AccountDeletedRoute: typeof AccountDeletedRoute
   ContactRoute: typeof ContactRoute
   HireTalentRoute: typeof HireTalentRoute
+  PlansRoute: typeof PlansRoute
   PrivacyRoute: typeof PrivacyRoute
   RefundPolicyRoute: typeof RefundPolicyRoute
   TermsRoute: typeof TermsRoute
@@ -247,6 +260,13 @@ declare module '@tanstack/react-router' {
       path: '/hire-talent'
       fullPath: '/hire-talent'
       preLoaderRoute: typeof HireTalentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plans': {
+      id: '/plans'
+      path: '/plans'
+      fullPath: '/plans'
+      preLoaderRoute: typeof PlansRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -321,6 +341,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountDeletedRoute: AccountDeletedRoute,
   ContactRoute: ContactRoute,
   HireTalentRoute: HireTalentRoute,
+  PlansRoute: PlansRoute,
   PrivacyRoute: PrivacyRoute,
   RefundPolicyRoute: RefundPolicyRoute,
   TermsRoute: TermsRoute,
