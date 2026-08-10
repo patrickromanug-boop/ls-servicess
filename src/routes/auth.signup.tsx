@@ -8,10 +8,12 @@ import { Footer } from "@/components/site/Footer";
 import { supabase } from "@/lib/supabase";
 import { signInWithGoogle } from "@/lib/auth";
 import { AuthShell, GoogleButton } from "@/components/auth/AuthShell";
+import { ensureWebSubscription, updateProfile } from "@/lib/account";
 
 const schema = z.object({
   fullName: z.string().trim().min(2, { message: "Enter your full name" }).max(100),
   email: z.string().trim().email({ message: "Enter a valid email address" }).max(255),
+  phone: z.string().trim().min(9, { message: "Enter your phone number" }).max(20),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(72),
 });
 
@@ -40,6 +42,7 @@ function SignupPage() {
   const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -53,7 +56,7 @@ function SignupPage() {
       toast.error("Please agree to the Terms & Conditions and Privacy Policy");
       return;
     }
-    const parsed = schema.safeParse({ fullName, email, password });
+    const parsed = schema.safeParse({ fullName, email, phone, password });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]!.message);
       return;
@@ -63,7 +66,7 @@ function SignupPage() {
       email: parsed.data.email,
       password: parsed.data.password,
       options: {
-        data: { full_name: parsed.data.fullName },
+        data: { full_name: parsed.data.fullName, phone: parsed.data.phone },
         emailRedirectTo: `${window.location.origin}${safeRedirect}`,
       },
     });
@@ -77,7 +80,18 @@ function SignupPage() {
       setSent(true);
       return;
     }
-    navigate({ to: safeRedirect, replace: true });
+    // Save the profile (phone drives the trial-abuse check), create the trial
+    // row, then send them to the plans screen before the dashboard.
+    try {
+      await updateProfile(data.user!.id, {
+        full_name: parsed.data.fullName,
+        phone: parsed.data.phone,
+      });
+      await ensureWebSubscription();
+    } catch {
+      // Non-fatal: the plans screen retries this.
+    }
+    navigate({ to: "/plans", replace: true });
   }
 
   if (sent) {
@@ -117,6 +131,7 @@ function SignupPage() {
         <form onSubmit={submit} className="mt-4 space-y-3">
           <Field label="Full name" type="text" value={fullName} onChange={setFullName} />
           <Field label="Email" type="email" value={email} onChange={setEmail} autoComplete="email" />
+          <Field label="Phone number" type="tel" value={phone} onChange={setPhone} autoComplete="tel" />
           <Field
             label="Password"
             type="password"

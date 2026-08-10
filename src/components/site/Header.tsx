@@ -37,6 +37,15 @@ export function Header() {
               {item.label}
             </Link>
           ))}
+          {user && (
+            <Link
+              to="/dashboard"
+              className="text-foreground/70 hover:text-brand hover:bg-brand-soft rounded-md px-3 py-2 text-sm font-medium transition-colors"
+              activeProps={{ className: "text-brand bg-brand-soft" }}
+            >
+              Dashboard
+            </Link>
+          )}
           {user ? (
             <button
               onClick={signOut}
@@ -73,6 +82,15 @@ export function Header() {
               {item.label}
             </Link>
           ))}
+          {user && (
+            <Link
+              to="/dashboard"
+              onClick={() => setOpen(false)}
+              className="block rounded-md px-2 py-2.5 text-sm font-medium"
+            >
+              Dashboard
+            </Link>
+          )}
           {user ? (
             <button onClick={signOut} className="block px-2 py-2.5 text-sm font-semibold">
               Sign out
