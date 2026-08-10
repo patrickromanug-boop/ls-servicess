@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AccountDeletedRouteImport } from './routes/account-deleted'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as HireTalentRouteImport } from './routes/hire-talent'
 import { Route as PlansRouteImport } from './routes/plans'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -43,6 +44,11 @@ const AccountDeletedRoute = AccountDeletedRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HireTalentRoute = HireTalentRouteImport.update({
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/account-deleted': typeof AccountDeletedRoute
   '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRoute
   '/hire-talent': typeof HireTalentRoute
   '/plans': typeof PlansRoute
   '/privacy': typeof PrivacyRoute
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/account-deleted': typeof AccountDeletedRoute
   '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRoute
   '/hire-talent': typeof HireTalentRoute
   '/plans': typeof PlansRoute
   '/privacy': typeof PrivacyRoute
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/account-deleted': typeof AccountDeletedRoute
   '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRoute
   '/hire-talent': typeof HireTalentRoute
   '/plans': typeof PlansRoute
   '/privacy': typeof PrivacyRoute
@@ -160,6 +169,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/account-deleted'
     | '/contact'
+    | '/dashboard'
     | '/hire-talent'
     | '/plans'
     | '/privacy'
@@ -177,6 +187,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/account-deleted'
     | '/contact'
+    | '/dashboard'
     | '/hire-talent'
     | '/plans'
     | '/privacy'
@@ -194,6 +205,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/account-deleted'
     | '/contact'
+    | '/dashboard'
     | '/hire-talent'
     | '/plans'
     | '/privacy'
@@ -212,6 +224,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AccountDeletedRoute: typeof AccountDeletedRoute
   ContactRoute: typeof ContactRoute
+  DashboardRoute: typeof DashboardRoute
   HireTalentRoute: typeof HireTalentRoute
   PlansRoute: typeof PlansRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -253,6 +266,13 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/hire-talent': {
@@ -340,6 +360,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AccountDeletedRoute: AccountDeletedRoute,
   ContactRoute: ContactRoute,
+  DashboardRoute: DashboardRoute,
   HireTalentRoute: HireTalentRoute,
   PlansRoute: PlansRoute,
   PrivacyRoute: PrivacyRoute,
