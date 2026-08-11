@@ -149,11 +149,27 @@ export async function fetchProfile(userId: string): Promise<ProfileRow | null> {
   return (data as ProfileRow) ?? null;
 }
 
+/** 
+ * Update (or insert) a user's profile.
+ * Uses update-first with count: "exact" to detect if row exists,
+ * then inserts if no row was updated.
+ */
 export async function updateProfile(userId: string, patch: Partial<ProfileRow>) {
-  const { error } = await supabase
+  // Try update first, requesting the exact number of rows affected
+  const { error: updateError, count } = await supabase
     .from("profiles")
-    .upsert({ id: userId, ...patch }, { onConflict: "id" });
-  if (error) throw error;
+    .update(patch, { count: "exact" })
+    .eq("id", userId);
+
+  if (updateError) throw updateError;
+
+  // If no row updated (count is 0), insert a new one
+  if (count === 0) {
+    const { error: insertError } = await supabase
+      .from("profiles")
+      .insert({ id: userId, ...patch });
+    if (insertError) throw insertError;
+  }
 }
 
 export async function createDocumentRequest(documentType: DocumentType, formData: unknown) {
