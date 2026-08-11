@@ -23,6 +23,7 @@ const NAV = [
   { to: "/admin/reported-jobs", label: "Reported Jobs", icon: Flag },
   { to: "/admin/subscribers", label: "Subscribers", icon: CreditCard },
   { to: "/admin/job-alert-subscribers", label: "Job Alert Subscribers", icon: Users },
+  { to: "/admin/job-alert-inquiries", label: "Job Alert Inquiries", icon: FileText },
   { to: "/admin/document-requests", label: "Document Requests", icon: FileText },
   { to: "/admin/employer-inquiries", label: "Employer Inquiries", icon: Building2 },
   { to: "/admin/users", label: "Users", icon: Users },
