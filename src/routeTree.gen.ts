@@ -22,6 +22,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
+import { Route as AdminPostJobRouteImport } from './routes/admin.post-job'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
@@ -94,6 +95,11 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/admin/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminPostJobRoute = AdminPostJobRouteImport.update({
+  id: '/admin/post-job',
+  path: '/admin/post-job',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   id: '/auth/forgot-password',
   path: '/auth/forgot-password',
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/post-job': typeof AdminPostJobRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -159,6 +166,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/post-job': typeof AdminPostJobRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -181,6 +189,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/post-job': typeof AdminPostJobRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -204,6 +213,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin/dashboard'
     | '/admin/login'
+    | '/admin/post-job'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/reset-password'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin/dashboard'
     | '/admin/login'
+    | '/admin/post-job'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/reset-password'
@@ -246,6 +257,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin/dashboard'
     | '/admin/login'
+    | '/admin/post-job'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/reset-password'
@@ -268,6 +280,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminPostJobRoute: typeof AdminPostJobRoute
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
@@ -370,6 +383,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/post-job': {
+      id: '/admin/post-job'
+      path: '/admin/post-job'
+      fullPath: '/admin/post-job'
+      preLoaderRoute: typeof AdminPostJobRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/forgot-password': {
       id: '/auth/forgot-password'
       path: '/auth/forgot-password'
@@ -428,6 +448,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   AdminLoginRoute: AdminLoginRoute,
+  AdminPostJobRoute: AdminPostJobRoute,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
