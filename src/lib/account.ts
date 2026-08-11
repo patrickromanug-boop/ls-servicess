@@ -2,6 +2,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "./supabase";
 import type { BillingCycle, DocumentType, Tier } from "./plans";
 import { planByTier, formatUgx } from "./plans";
+import { BASE_COLUMNS, APPLY_COLUMNS, type JobRow } from "./jobs";
 
 export type WebSubscription = {
   id: string;
@@ -14,6 +15,7 @@ export type WebSubscription = {
   document_generations_used_this_period: number;
   period_started_at: string;
   payment_provider_ref: string | null;
+  alert_delivery: "dashboard" | "whatsapp" | "both"; // new field
 };
 
 export type PaymentRow = {
@@ -59,6 +61,64 @@ export async function selectPlan(tier: Tier, cycle: BillingCycle): Promise<WebSu
   const { data, error } = await supabase.rpc("web_select_plan", { _tier: tier, _cycle: cycle });
   if (error) throw error;
   return data as WebSubscription;
+}
+
+/** Update alert delivery preference via secure RPC. */
+export async function updateAlertDelivery(
+  delivery: "dashboard" | "whatsapp" | "both"
+): Promise<WebSubscription> {
+  const { data, error } = await supabase.rpc("web_update_alert_delivery", {
+    _delivery: delivery,
+  });
+  if (error) throw error;
+  return data as WebSubscription;
+}
+
+/** Fetch active jobs matching the user's preferred categories/locations. */
+export async function fetchTargetedJobs(
+  preferredCategories: string[],
+  preferredLocations: string[]
+): Promise<JobRow[]> {
+  if (preferredCategories.length === 0 && preferredLocations.length === 0) {
+    return [];
+  }
+
+  const columns = `${BASE_COLUMNS},${APPLY_COLUMNS}`;
+  let query = supabase
+    .from("jobs")
+    .select(columns)
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .limit(100);
+
+  if (preferredCategories.length > 0) {
+    query = query.in("categories.name", preferredCategories);
+  }
+  if (preferredLocations.length > 0) {
+    query = query.in("locations.name", preferredLocations);
+  }
+
+  let { data, error } = await query;
+  if (error?.code === "42703") {
+    // Fallback without new columns
+    let fallbackQuery = supabase
+      .from("jobs")
+      .select(BASE_COLUMNS)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (preferredCategories.length > 0) {
+      fallbackQuery = fallbackQuery.in("categories.name", preferredCategories);
+    }
+    if (preferredLocations.length > 0) {
+      fallbackQuery = fallbackQuery.in("locations.name", preferredLocations);
+    }
+    const { data: fbData, error: fbError } = await fallbackQuery;
+    if (fbError) throw fbError;
+    return (fbData ?? []) as unknown as JobRow[];
+  }
+  if (error) throw error;
+  return (data ?? []) as unknown as JobRow[];
 }
 
 export async function fetchPayments(): Promise<PaymentRow[]> {
@@ -156,10 +216,7 @@ export function documentsRemaining(sub: WebSubscription | null): number | null {
 /**
  * PAYMENT PLACEHOLDER.
  * TODO(payments): replace with the real Pesapal flow once the merchant account
- * is live. That work belongs server-side: create a `payments` row, request a
- * Pesapal order, redirect to the checkout URL, and flip
- * web_subscriptions.status to 'active' from the verified IPN/callback only.
- * Nothing about payment state may ever be written from the browser.
+ * is live.
  */
 export async function initiateWebPayment(tier: Tier, billingCycle: BillingCycle) {
   const plan = planByTier(tier);
