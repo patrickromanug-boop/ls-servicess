@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
@@ -22,8 +22,11 @@ import {
   initialsOf,
   type JobRow,
 } from "@/lib/jobs";
+import { createDashboardCancelInquiry } from "@/lib/alert-inquiries";
 
-// ---- Tab definitions ----
+// ---- Constants ----
+const ADMIN_WHATSAPP = "+256772702263";
+
 const TAB_IDS = {
   plan: "plan",
   targeted: "targeted",
@@ -139,7 +142,14 @@ function DashboardPage() {
 
         <div className="mt-6">
           {tab === "plan" && <PlanSection sub={sub} />}
-          {tab === "targeted" && <TargetedJobsPanel userId={user.id} subscription={sub} />}
+          {tab === "targeted" && (
+            <TargetedJobsPanel
+              userId={user.id}
+              subscription={sub}
+              profile={profileQuery.data}
+              onSwitchToProfile={() => setTab("profile")}
+            />
+          )}
           {tab === "documents" && (
             <DocumentsSection user={user} sub={sub} fullName={fullName} />
           )}
@@ -161,16 +171,61 @@ function DashboardPage() {
 function TargetedJobsPanel({
   userId,
   subscription,
+  profile,
+  onSwitchToProfile,
 }: {
   userId: string;
   subscription: WebSubscription | null;
+  profile: { full_name?: string | null; phone?: string | null; preferred_categories?: string[] | null; preferred_locations?: string[] | null } | null;
+  onSwitchToProfile: () => void;
 }) {
-  const profileQuery = useQuery(profileQueryOptions(userId));
   const queryClient = useQueryClient();
+  const [pendingDelivery, setPendingDelivery] = useState<"dashboard" | "whatsapp" | "both" | null>(null);
+  const currentDelivery = subscription?.alert_delivery ?? "dashboard";
 
-  const preferredCategories = profileQuery.data?.preferred_categories ?? [];
-  const preferredLocations = profileQuery.data?.preferred_locations ?? [];
+  // Profile completeness check
+  const phone = profile?.phone?.trim();
+  const hasPreferences =
+    (profile?.preferred_categories && profile.preferred_categories.length > 0) ||
+    (profile?.preferred_locations && profile.preferred_locations.length > 0);
+  const profileComplete = !!phone && hasPreferences;
 
+  const handleRadioClick = (value: "dashboard" | "whatsapp" | "both") => {
+    if (!profileComplete) {
+      onSwitchToProfile();
+      return;
+    }
+    setPendingDelivery(value);
+  };
+
+  const handleConfirm = async () => {
+    if (!pendingDelivery) return;
+    try {
+      await updateAlertDelivery(pendingDelivery);
+      queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
+      setPendingDelivery(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!pendingDelivery) return;
+    const userFullName = profile?.full_name ?? "User";
+    if (pendingDelivery === "whatsapp" || pendingDelivery === "both") {
+      const msg = encodeURIComponent(
+        `${userFullName} cancelled a WhatsApp job alert request (pending choice: ${pendingDelivery}).`
+      );
+      window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${msg}`, "_blank");
+    } else if (pendingDelivery === "dashboard") {
+      await createDashboardCancelInquiry().catch(console.error);
+    }
+    setPendingDelivery(null);
+  };
+
+  // Fetch targeted jobs for display (same as before)
+  const preferredCategories = profile?.preferred_categories ?? [];
+  const preferredLocations = profile?.preferred_locations ?? [];
   const targetedJobsQuery = useQuery({
     queryKey: ["targeted-jobs", userId],
     queryFn: () => fetchTargetedJobs(preferredCategories, preferredLocations),
@@ -178,58 +233,103 @@ function TargetedJobsPanel({
     staleTime: 30_000,
   });
 
-  const currentDelivery = subscription?.alert_delivery ?? "dashboard";
-
-  const handleDeliveryChange = async (value: string) => {
-    try {
-      await updateAlertDelivery(value as "dashboard" | "whatsapp" | "both");
-      queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   return (
     <div>
-      {/* Preference toggle */}
+      {/* Alert delivery preferences */}
       <div className="border-border rounded-2xl border bg-white p-5">
         <h3 className="font-display text-sm font-bold">Job alert delivery</h3>
         <p className="text-muted-foreground mt-1 text-xs">
           Choose how you'd like to receive job matches.
         </p>
+
+        {!profileComplete && (
+          <p className="text-amber-600 text-xs mt-2">
+            Please complete your profile (phone number and at least one job preference) to enable alerts.
+          </p>
+        )}
+
         <div className="mt-3 flex flex-wrap gap-3">
-          {(["dashboard", "whatsapp", "both"] as const).map((option) => (
-            <label
-              key={option}
-              className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium cursor-pointer transition-colors ${
-                currentDelivery === option
-                  ? "border-brand bg-brand/10 text-brand"
-                  : "border-border text-muted-foreground hover:border-gray-400"
-              }`}
-            >
-              <input
-                type="radio"
-                name="alert_delivery"
-                value={option}
-                checked={currentDelivery === option}
-                onChange={() => handleDeliveryChange(option)}
-                className="hidden"
-              />
-              {option === "dashboard" && "Dashboard only"}
-              {option === "whatsapp" && "WhatsApp reach-out"}
-              {option === "both" && "Both"}
-            </label>
-          ))}
+          {(["dashboard", "whatsapp", "both"] as const).map((option) => {
+            const isCurrentReal = currentDelivery === option && pendingDelivery === null;
+            const isPending = pendingDelivery === option;
+            return (
+              <label
+                key={option}
+                className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium cursor-pointer transition-colors ${
+                  isPending
+                    ? "border-brand bg-brand/10 text-brand"
+                    : isCurrentReal
+                    ? "border-brand bg-brand/5 text-brand"
+                    : "border-border text-muted-foreground hover:border-gray-400"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="alert_delivery"
+                  value={option}
+                  checked={isPending || isCurrentReal}
+                  onChange={() => handleRadioClick(option)}
+                  className="hidden"
+                />
+                {option === "dashboard" && "Dashboard only"}
+                {option === "whatsapp" && "WhatsApp reach-out"}
+                {option === "both" && "Both"}
+              </label>
+            );
+          })}
         </div>
+
+        {/* Confirmation panel (shown when a pending selection exists) */}
+        {pendingDelivery && profileComplete && (
+          <div className="mt-4 rounded-xl border border-brand/20 bg-brand/[0.03] p-4">
+            <p className="text-xs font-medium">
+              Confirm your alert delivery preference: <strong className="capitalize">{pendingDelivery}</strong>
+            </p>
+            <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+              {profile?.full_name && <p>Name: {profile.full_name}</p>}
+              {phone && <p>Phone: {phone}</p>}
+              {preferredCategories.length > 0 && (
+                <p>Categories: {preferredCategories.join(", ")}</p>
+              )}
+              {preferredLocations.length > 0 && (
+                <p>Locations: {preferredLocations.join(", ")}</p>
+              )}
+            </div>
+            <div className="mt-3 flex gap-2">
+              <button
+                onClick={handleConfirm}
+                className="rounded-lg bg-brand px-4 py-2 text-xs font-bold text-white"
+              >
+                Confirm
+              </button>
+              <button
+                onClick={() => { handleCancel(); }}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-xs font-bold text-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onSwitchToProfile}
+                className="rounded-lg bg-gray-100 px-3 py-2 text-xs font-bold text-gray-500"
+              >
+                Edit Info
+              </button>
+            </div>
+            <p className="text-[11px] text-gray-400 mt-2">
+              {pendingDelivery !== "dashboard"
+                ? "If you cancel, the admin will be notified via WhatsApp."
+                : "If you cancel, the admin will be notified in the portal."}
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Jobs list */}
+      {/* Targeted jobs list */}
       <div className="mt-6">
         <h3 className="font-display text-sm font-bold">Jobs matching your preferences</h3>
         {preferredCategories.length === 0 && preferredLocations.length === 0 ? (
           <p className="text-muted-foreground mt-2 text-sm">
-            Set your preferred job categories and locations in your Profile tab to see targeted
-            jobs here.
+            Set your preferred job categories and locations in your Profile tab to see targeted jobs here.
           </p>
         ) : targetedJobsQuery.isPending ? (
           <p className="text-muted-foreground mt-2 text-sm">Loading jobs…</p>
@@ -249,7 +349,7 @@ function TargetedJobsPanel({
   );
 }
 
-// ---- Mini job card for dashboard ----
+// ---- Mini job card ----
 function JobMiniCard({ job }: { job: JobRow }) {
   const days = daysRemaining(job.deadline);
   return (
