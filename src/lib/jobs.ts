@@ -21,21 +21,12 @@ export type JobRow = {
   job_types: { name: string } | null;
 };
 
-const BASE_COLUMNS =
+export const BASE_COLUMNS =
   "id,title,organization,purpose,requirements,other_details,deadline,official_link,application_method,views_count,status,created_at,categories(name),locations(name),job_types(name)";
 
-/**
- * application_instructions / application_email are newer admin columns. Until the
- * SQL migration has been run on the shared Supabase project, PostgREST answers
- * 42703 ("column does not exist"); we then retry without them so the site still
- * renders instead of blank-screening.
- */
-const APPLY_COLUMNS = "application_instructions,application_email";
-const SELECT = `${BASE_COLUMNS},${APPLY_COLUMNS}`;
+export const APPLY_COLUMNS = "application_instructions,application_email";
 
-function isMissingColumn(error: { code?: string } | null) {
-  return error?.code === "42703";
-}
+export const SELECT_COLUMNS = `${BASE_COLUMNS},${APPLY_COLUMNS}`;
 
 export function slugify(value: string) {
   return value
@@ -45,7 +36,6 @@ export function slugify(value: string) {
     .slice(0, 70);
 }
 
-/** Real crawlable URL segment: /jobs/[slug]-[id] */
 export function jobSlug(job: { id: string; title: string }) {
   return `${slugify(job.title)}-${job.id}`;
 }
@@ -77,6 +67,10 @@ export function initialsOf(organization: string) {
     .join("");
 }
 
+function isMissingColumn(error: { code?: string } | null) {
+  return error?.code === "42703";
+}
+
 export async function fetchJobs(): Promise<JobRow[]> {
   const query = (columns: string) =>
     supabase
@@ -86,7 +80,7 @@ export async function fetchJobs(): Promise<JobRow[]> {
       .order("created_at", { ascending: false })
       .limit(300);
 
-  let { data, error } = await query(SELECT);
+  let { data, error } = await query(SELECT_COLUMNS);
   if (isMissingColumn(error)) ({ data, error } = await query(BASE_COLUMNS));
   if (error) throw error;
   return (data ?? []) as unknown as JobRow[];
@@ -96,7 +90,7 @@ export async function fetchJobById(id: string): Promise<JobRow | null> {
   const query = (columns: string) =>
     supabase.from("jobs").select(columns).eq("id", id).maybeSingle();
 
-  let { data, error } = await query(SELECT);
+  let { data, error } = await query(SELECT_COLUMNS);
   if (isMissingColumn(error)) ({ data, error } = await query(BASE_COLUMNS));
   if (error) throw error;
   return (data as unknown as JobRow) ?? null;
