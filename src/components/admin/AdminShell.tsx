@@ -22,6 +22,7 @@ const NAV = [
   { to: "/admin/jobs", label: "Manage Jobs", icon: Briefcase },
   { to: "/admin/reported-jobs", label: "Reported Jobs", icon: Flag },
   { to: "/admin/subscribers", label: "Subscribers", icon: CreditCard },
+  { to: "/admin/job-alert-subscribers", label: "Job Alert Subscribers", icon: Users },
   { to: "/admin/document-requests", label: "Document Requests", icon: FileText },
   { to: "/admin/employer-inquiries", label: "Employer Inquiries", icon: Building2 },
   { to: "/admin/users", label: "Users", icon: Users },
@@ -82,15 +83,6 @@ export function AdminSidebar() {
   );
 }
 
-/**
- * Gate for every /admin/* page.
- *
- * Data access is enforced in Postgres: the admin-wide read/write policies in
- * supabase/sql/004_admin_portal.sql all go through public.is_admin(), so even a
- * hand-crafted request from a non-admin session returns nothing. This component
- * only decides what to paint, and paints nothing until the role is confirmed —
- * so admin content never flashes.
- */
 export function AdminGuard({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
