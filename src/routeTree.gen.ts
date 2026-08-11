@@ -21,8 +21,14 @@ import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
+import { Route as AdminDocumentRequestsRouteImport } from './routes/admin.document-requests'
+import { Route as AdminEmployerInquiriesRouteImport } from './routes/admin.employer-inquiries'
+import { Route as AdminJobsRouteImport } from './routes/admin.jobs'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminPostJobRouteImport } from './routes/admin.post-job'
+import { Route as AdminReportedJobsRouteImport } from './routes/admin.reported-jobs'
+import { Route as AdminSubscribersRouteImport } from './routes/admin.subscribers'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AuthForgotPasswordRouteImport } from './routes/auth.forgot-password'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
 import { Route as AuthResetPasswordRouteImport } from './routes/auth.reset-password'
@@ -90,6 +96,21 @@ const AdminDashboardRoute = AdminDashboardRouteImport.update({
   path: '/admin/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminDocumentRequestsRoute = AdminDocumentRequestsRouteImport.update({
+  id: '/admin/document-requests',
+  path: '/admin/document-requests',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminEmployerInquiriesRoute = AdminEmployerInquiriesRouteImport.update({
+  id: '/admin/employer-inquiries',
+  path: '/admin/employer-inquiries',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminJobsRoute = AdminJobsRouteImport.update({
+  id: '/admin/jobs',
+  path: '/admin/jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/admin/login',
   path: '/admin/login',
@@ -98,6 +119,21 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
 const AdminPostJobRoute = AdminPostJobRouteImport.update({
   id: '/admin/post-job',
   path: '/admin/post-job',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminReportedJobsRoute = AdminReportedJobsRouteImport.update({
+  id: '/admin/reported-jobs',
+  path: '/admin/reported-jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSubscribersRoute = AdminSubscribersRouteImport.update({
+  id: '/admin/subscribers',
+  path: '/admin/subscribers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
@@ -143,8 +179,14 @@ export interface FileRoutesByFullPath {
   '/refund-policy': typeof RefundPolicyRoute
   '/terms': typeof TermsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/document-requests': typeof AdminDocumentRequestsRoute
+  '/admin/employer-inquiries': typeof AdminEmployerInquiriesRoute
+  '/admin/jobs': typeof AdminJobsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/post-job': typeof AdminPostJobRoute
+  '/admin/reported-jobs': typeof AdminReportedJobsRoute
+  '/admin/subscribers': typeof AdminSubscribersRoute
+  '/admin/users': typeof AdminUsersRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -165,8 +207,14 @@ export interface FileRoutesByTo {
   '/refund-policy': typeof RefundPolicyRoute
   '/terms': typeof TermsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/document-requests': typeof AdminDocumentRequestsRoute
+  '/admin/employer-inquiries': typeof AdminEmployerInquiriesRoute
+  '/admin/jobs': typeof AdminJobsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/post-job': typeof AdminPostJobRoute
+  '/admin/reported-jobs': typeof AdminReportedJobsRoute
+  '/admin/subscribers': typeof AdminSubscribersRoute
+  '/admin/users': typeof AdminUsersRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -188,8 +236,14 @@ export interface FileRoutesById {
   '/refund-policy': typeof RefundPolicyRoute
   '/terms': typeof TermsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/document-requests': typeof AdminDocumentRequestsRoute
+  '/admin/employer-inquiries': typeof AdminEmployerInquiriesRoute
+  '/admin/jobs': typeof AdminJobsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/post-job': typeof AdminPostJobRoute
+  '/admin/reported-jobs': typeof AdminReportedJobsRoute
+  '/admin/subscribers': typeof AdminSubscribersRoute
+  '/admin/users': typeof AdminUsersRoute
   '/auth/forgot-password': typeof AuthForgotPasswordRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/reset-password': typeof AuthResetPasswordRoute
@@ -212,8 +266,14 @@ export interface FileRouteTypes {
     | '/refund-policy'
     | '/terms'
     | '/admin/dashboard'
+    | '/admin/document-requests'
+    | '/admin/employer-inquiries'
+    | '/admin/jobs'
     | '/admin/login'
     | '/admin/post-job'
+    | '/admin/reported-jobs'
+    | '/admin/subscribers'
+    | '/admin/users'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/reset-password'
@@ -234,8 +294,14 @@ export interface FileRouteTypes {
     | '/refund-policy'
     | '/terms'
     | '/admin/dashboard'
+    | '/admin/document-requests'
+    | '/admin/employer-inquiries'
+    | '/admin/jobs'
     | '/admin/login'
     | '/admin/post-job'
+    | '/admin/reported-jobs'
+    | '/admin/subscribers'
+    | '/admin/users'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/reset-password'
@@ -256,8 +322,14 @@ export interface FileRouteTypes {
     | '/refund-policy'
     | '/terms'
     | '/admin/dashboard'
+    | '/admin/document-requests'
+    | '/admin/employer-inquiries'
+    | '/admin/jobs'
     | '/admin/login'
     | '/admin/post-job'
+    | '/admin/reported-jobs'
+    | '/admin/subscribers'
+    | '/admin/users'
     | '/auth/forgot-password'
     | '/auth/login'
     | '/auth/reset-password'
@@ -279,8 +351,14 @@ export interface RootRouteChildren {
   RefundPolicyRoute: typeof RefundPolicyRoute
   TermsRoute: typeof TermsRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminDocumentRequestsRoute: typeof AdminDocumentRequestsRoute
+  AdminEmployerInquiriesRoute: typeof AdminEmployerInquiriesRoute
+  AdminJobsRoute: typeof AdminJobsRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminPostJobRoute: typeof AdminPostJobRoute
+  AdminReportedJobsRoute: typeof AdminReportedJobsRoute
+  AdminSubscribersRoute: typeof AdminSubscribersRoute
+  AdminUsersRoute: typeof AdminUsersRoute
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthResetPasswordRoute: typeof AuthResetPasswordRoute
@@ -376,6 +454,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/document-requests': {
+      id: '/admin/document-requests'
+      path: '/admin/document-requests'
+      fullPath: '/admin/document-requests'
+      preLoaderRoute: typeof AdminDocumentRequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/employer-inquiries': {
+      id: '/admin/employer-inquiries'
+      path: '/admin/employer-inquiries'
+      fullPath: '/admin/employer-inquiries'
+      preLoaderRoute: typeof AdminEmployerInquiriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/jobs': {
+      id: '/admin/jobs'
+      path: '/admin/jobs'
+      fullPath: '/admin/jobs'
+      preLoaderRoute: typeof AdminJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/admin/login'
@@ -388,6 +487,27 @@ declare module '@tanstack/react-router' {
       path: '/admin/post-job'
       fullPath: '/admin/post-job'
       preLoaderRoute: typeof AdminPostJobRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/reported-jobs': {
+      id: '/admin/reported-jobs'
+      path: '/admin/reported-jobs'
+      fullPath: '/admin/reported-jobs'
+      preLoaderRoute: typeof AdminReportedJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/subscribers': {
+      id: '/admin/subscribers'
+      path: '/admin/subscribers'
+      fullPath: '/admin/subscribers'
+      preLoaderRoute: typeof AdminSubscribersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/forgot-password': {
@@ -447,8 +567,14 @@ const rootRouteChildren: RootRouteChildren = {
   RefundPolicyRoute: RefundPolicyRoute,
   TermsRoute: TermsRoute,
   AdminDashboardRoute: AdminDashboardRoute,
+  AdminDocumentRequestsRoute: AdminDocumentRequestsRoute,
+  AdminEmployerInquiriesRoute: AdminEmployerInquiriesRoute,
+  AdminJobsRoute: AdminJobsRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminPostJobRoute: AdminPostJobRoute,
+  AdminReportedJobsRoute: AdminReportedJobsRoute,
+  AdminSubscribersRoute: AdminSubscribersRoute,
+  AdminUsersRoute: AdminUsersRoute,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthResetPasswordRoute: AuthResetPasswordRoute,
