@@ -170,7 +170,7 @@ export function AdminShell({
           <main className="px-6 py-6">{children}</main>
         </div>
       </div>
-    </AdminShell>
+    </AdminGuard>
   );
 }
 
