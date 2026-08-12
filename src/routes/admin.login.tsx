@@ -76,7 +76,7 @@ function AdminLoginPage() {
         <h1 className="font-display mt-8 text-2xl font-bold text-white">Staff portal</h1>
         <p className="mt-1 text-sm text-white/50">
           Internal use only. Jobseeker accounts sign in on the{" "}
-          <Link to="/auth/login" className="text-accent-orange font-semibold">
+          <Link to="/auth/login" search={{ redirect: undefined }} className="text-accent-orange font-semibold">
             main site
           </Link>
           .
