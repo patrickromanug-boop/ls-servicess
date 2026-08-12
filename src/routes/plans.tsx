@@ -1,8 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Info } from "lucide-react";
+import { Info, Sparkles } from "lucide-react";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { useAuth } from "@/lib/auth";
@@ -43,6 +43,7 @@ function PlansPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const search = useSearch({ strict: false }) as { feature?: string };
   const [busy, setBusy] = useState<Tier | "browse" | null>(null);
 
   useEffect(() => {
@@ -102,6 +103,13 @@ function PlansPage() {
             <p className="text-muted-foreground mx-auto mt-3 max-w-xl text-sm">
               Get jobs pushed to your WhatsApp and generate professional documents, or keep browsing
               for free.
+            </p>
+          )}
+
+          {search.feature === "targeted-jobs" && (
+            <p className="bg-accent-orange/10 text-accent-orange mx-auto mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold">
+              <Sparkles className="size-4" />
+              Choose a plan to unlock targeted job alerts and have matching jobs sent to your WhatsApp
             </p>
           )}
         </div>

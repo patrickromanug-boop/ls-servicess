@@ -18,6 +18,7 @@ import { DocumentsSection } from "@/components/dashboard/DocumentsSection";
 import { OtherServicesCards } from "@/components/site/OtherServicesCards";
 import { JobCard } from "@/components/jobs/JobCard";
 import { jobsQueryOptions, type JobRow } from "@/lib/jobs";
+import { Target } from "lucide-react";
 
 // ---- Tab definitions (reordered) ----
 const TAB_IDS = {
@@ -320,6 +321,7 @@ function JobListingPanel({ userId }: { userId: string }) {
   const allJobsQuery = useQuery(jobsQueryOptions());
   const subQuery = useQuery({ ...subscriptionQueryOptions(), enabled: !!userId });
   const profileQuery = useQuery({ ...profileQueryOptions(userId), enabled: !!userId });
+  const navigate = useNavigate();
 
   const sub = subQuery.data ?? null;
   const hasActivePlan = !!sub && (sub.status === "trial" || sub.status === "active");
@@ -338,6 +340,7 @@ function JobListingPanel({ userId }: { userId: string }) {
   const allJobs: JobRow[] = allJobsQuery.data ?? [];
   const targetedIds = new Set(targetedJobs.map((j) => j.id));
   const otherJobs = allJobs.filter((j) => !targetedIds.has(j.id));
+  const isFreePlan = !hasActivePlan;
 
   return (
     <div>
@@ -346,23 +349,61 @@ function JobListingPanel({ userId }: { userId: string }) {
         Find work that matches your preferences, or browse all open positions.
       </p>
 
-      {hasActivePlan && targetedJobs.length > 0 && (
-        <section className="mt-6">
-          <h3 className="font-display text-base font-semibold">Jobs for You</h3>
-          <p className="text-muted-foreground mt-1 text-xs">
-            Based on your preferred categories and locations.
-          </p>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {targetedJobs.map((job) => (
-              <JobCard key={job.id} job={job} />
-            ))}
+      {isFreePlan ? (
+        <section className="mt-6 rounded-2xl border border-brand/20 bg-brand/[0.03] p-5">
+          <div className="flex items-start gap-4">
+            <div className="rounded-xl bg-brand/10 p-3">
+              <Target className="size-6 text-brand" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-display text-base font-bold">Get jobs matched for you</h3>
+              <p className="text-muted-foreground mt-1 text-xs">
+                Tell us your preferred categories and locations, and we&apos;ll send matching
+                openings straight to your WhatsApp or dashboard — so you never miss an
+                opportunity.
+              </p>
+              <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
+                <li className="flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-brand" />
+                  Pick the job categories and locations you want
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-brand" />
+                  Get alerts on WhatsApp or right here in your dashboard
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-brand" />
+                  Apply faster with everything in one place
+                </li>
+              </ul>
+              <button
+                onClick={() => navigate({ to: "/plans", search: { feature: "targeted-jobs" } })}
+                className="bg-brand mt-4 rounded-lg px-4 py-2 text-xs font-bold text-white"
+              >
+                Try it out
+              </button>
+            </div>
           </div>
         </section>
+      ) : (
+        targetedJobs.length > 0 && (
+          <section className="mt-6">
+            <h3 className="font-display text-base font-semibold">Jobs for You</h3>
+            <p className="text-muted-foreground mt-1 text-xs">
+              Based on your preferred categories and locations.
+            </p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {targetedJobs.map((job) => (
+                <JobCard key={job.id} job={job} />
+              ))}
+            </div>
+          </section>
+        )
       )}
 
       <section className="mt-8">
         <h3 className="font-display text-base font-semibold">
-          {targetedJobs.length > 0 ? "All Other Jobs" : "All Jobs"}
+          {targetedJobs.length > 0 && hasActivePlan ? "All Other Jobs" : "All Jobs"}
         </h3>
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {otherJobs.map((job) => (
