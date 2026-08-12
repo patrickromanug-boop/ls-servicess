@@ -17,11 +17,7 @@ import { BillingSection } from "@/components/dashboard/BillingSection";
 import { DocumentsSection } from "@/components/dashboard/DocumentsSection";
 import { OtherServicesCards } from "@/components/site/OtherServicesCards";
 import { JobCard } from "@/components/jobs/JobCard";
-import { JobDetail } from "@/components/jobs/JobDetail";
 import { jobsQueryOptions, type JobRow } from "@/lib/jobs";
-import { createDashboardCancelInquiry } from "@/lib/alert-inquiries";
-
-const ADMIN_WHATSAPP = "+256772702263";
 
 // ---- Tab definitions (reordered) ----
 const TAB_IDS = {
