@@ -18,6 +18,7 @@ import { DocumentsSection } from "@/components/dashboard/DocumentsSection";
 import { OtherServicesCards } from "@/components/site/OtherServicesCards";
 import { JobCard } from "@/components/jobs/JobCard";
 import { jobsQueryOptions, type JobRow } from "@/lib/jobs";
+import { Target } from "lucide-react";
 
 // ---- Tab definitions (reordered) ----
 const TAB_IDS = {
