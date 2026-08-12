@@ -43,6 +43,7 @@ function PlansPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const search = useSearch({ strict: false }) as { feature?: string };
   const [busy, setBusy] = useState<Tier | "browse" | null>(null);
 
   useEffect(() => {
