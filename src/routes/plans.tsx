@@ -19,6 +19,9 @@ import type { BillingCycle, Tier } from "@/lib/plans";
 
 export const Route = createFileRoute("/plans")({
   ssr: false,
+  validateSearch: (search: Record<string, unknown>) => ({
+    feature: typeof search['feature'] === "string" ? (search['feature'] as string) : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Choose your plan — LS Services" },
