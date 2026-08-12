@@ -23,6 +23,8 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 import { Route as AdminDocumentRequestsRouteImport } from './routes/admin.document-requests'
 import { Route as AdminEmployerInquiriesRouteImport } from './routes/admin.employer-inquiries'
+import { Route as AdminJobAlertInquiriesRouteImport } from './routes/admin.job-alert-inquiries'
+import { Route as AdminJobAlertSubscribersRouteImport } from './routes/admin.job-alert-subscribers'
 import { Route as AdminJobsRouteImport } from './routes/admin.jobs'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminPostJobRouteImport } from './routes/admin.post-job'
@@ -106,6 +108,17 @@ const AdminEmployerInquiriesRoute = AdminEmployerInquiriesRouteImport.update({
   path: '/admin/employer-inquiries',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminJobAlertInquiriesRoute = AdminJobAlertInquiriesRouteImport.update({
+  id: '/admin/job-alert-inquiries',
+  path: '/admin/job-alert-inquiries',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminJobAlertSubscribersRoute =
+  AdminJobAlertSubscribersRouteImport.update({
+    id: '/admin/job-alert-subscribers',
+    path: '/admin/job-alert-subscribers',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminJobsRoute = AdminJobsRouteImport.update({
   id: '/admin/jobs',
   path: '/admin/jobs',
@@ -181,6 +194,8 @@ export interface FileRoutesByFullPath {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/document-requests': typeof AdminDocumentRequestsRoute
   '/admin/employer-inquiries': typeof AdminEmployerInquiriesRoute
+  '/admin/job-alert-inquiries': typeof AdminJobAlertInquiriesRoute
+  '/admin/job-alert-subscribers': typeof AdminJobAlertSubscribersRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/post-job': typeof AdminPostJobRoute
@@ -209,6 +224,8 @@ export interface FileRoutesByTo {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/document-requests': typeof AdminDocumentRequestsRoute
   '/admin/employer-inquiries': typeof AdminEmployerInquiriesRoute
+  '/admin/job-alert-inquiries': typeof AdminJobAlertInquiriesRoute
+  '/admin/job-alert-subscribers': typeof AdminJobAlertSubscribersRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/post-job': typeof AdminPostJobRoute
@@ -238,6 +255,8 @@ export interface FileRoutesById {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/document-requests': typeof AdminDocumentRequestsRoute
   '/admin/employer-inquiries': typeof AdminEmployerInquiriesRoute
+  '/admin/job-alert-inquiries': typeof AdminJobAlertInquiriesRoute
+  '/admin/job-alert-subscribers': typeof AdminJobAlertSubscribersRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/post-job': typeof AdminPostJobRoute
@@ -268,6 +287,8 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/document-requests'
     | '/admin/employer-inquiries'
+    | '/admin/job-alert-inquiries'
+    | '/admin/job-alert-subscribers'
     | '/admin/jobs'
     | '/admin/login'
     | '/admin/post-job'
@@ -296,6 +317,8 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/document-requests'
     | '/admin/employer-inquiries'
+    | '/admin/job-alert-inquiries'
+    | '/admin/job-alert-subscribers'
     | '/admin/jobs'
     | '/admin/login'
     | '/admin/post-job'
@@ -324,6 +347,8 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/document-requests'
     | '/admin/employer-inquiries'
+    | '/admin/job-alert-inquiries'
+    | '/admin/job-alert-subscribers'
     | '/admin/jobs'
     | '/admin/login'
     | '/admin/post-job'
@@ -353,6 +378,8 @@ export interface RootRouteChildren {
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminDocumentRequestsRoute: typeof AdminDocumentRequestsRoute
   AdminEmployerInquiriesRoute: typeof AdminEmployerInquiriesRoute
+  AdminJobAlertInquiriesRoute: typeof AdminJobAlertInquiriesRoute
+  AdminJobAlertSubscribersRoute: typeof AdminJobAlertSubscribersRoute
   AdminJobsRoute: typeof AdminJobsRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminPostJobRoute: typeof AdminPostJobRoute
@@ -468,6 +495,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminEmployerInquiriesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/job-alert-inquiries': {
+      id: '/admin/job-alert-inquiries'
+      path: '/admin/job-alert-inquiries'
+      fullPath: '/admin/job-alert-inquiries'
+      preLoaderRoute: typeof AdminJobAlertInquiriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/job-alert-subscribers': {
+      id: '/admin/job-alert-subscribers'
+      path: '/admin/job-alert-subscribers'
+      fullPath: '/admin/job-alert-subscribers'
+      preLoaderRoute: typeof AdminJobAlertSubscribersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/jobs': {
       id: '/admin/jobs'
       path: '/admin/jobs'
@@ -569,6 +610,8 @@ const rootRouteChildren: RootRouteChildren = {
   AdminDashboardRoute: AdminDashboardRoute,
   AdminDocumentRequestsRoute: AdminDocumentRequestsRoute,
   AdminEmployerInquiriesRoute: AdminEmployerInquiriesRoute,
+  AdminJobAlertInquiriesRoute: AdminJobAlertInquiriesRoute,
+  AdminJobAlertSubscribersRoute: AdminJobAlertSubscribersRoute,
   AdminJobsRoute: AdminJobsRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminPostJobRoute: AdminPostJobRoute,
@@ -586,3 +629,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
