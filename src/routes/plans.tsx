@@ -105,6 +105,13 @@ function PlansPage() {
               for free.
             </p>
           )}
+
+          {search.feature === "targeted-jobs" && (
+            <p className="bg-accent-orange/10 text-accent-orange mx-auto mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold">
+              <Sparkles className="size-4" />
+              Choose a plan to unlock targeted job alerts and have matching jobs sent to your WhatsApp
+            </p>
+          )}
         </div>
 
         <div className="mt-10">
