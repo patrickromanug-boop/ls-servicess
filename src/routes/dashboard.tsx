@@ -210,32 +210,37 @@ function TargetedJobsPanel({
     }
   };
 
-  const handleCancel = async () => {
-    if (!pendingDelivery) return;
-    const userFullName = profile?.full_name ?? "User";
-    if (pendingDelivery === "whatsapp" || pendingDelivery === "both") {
-      const msg = encodeURIComponent(
-        `${userFullName} cancelled a WhatsApp job alert request (pending choice: ${pendingDelivery}).`
-      );
-      window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${msg}`, "_blank");
-    } else if (pendingDelivery === "dashboard") {
-      await createDashboardCancelInquiry().catch(console.error);
-    }
-    setPendingDelivery(null);
-  };
+  // Cancel simply discards the pending choice — no WhatsApp, no inquiry row.
+  const handleCancel = () => setPendingDelivery(null);
 
   return (
     <div className="border-border rounded-2xl border bg-white p-5">
       <h3 className="font-display text-sm font-bold">Job alert delivery</h3>
       <p className="text-muted-foreground mt-1 text-xs">
-        Choose how you'd like to receive job matches.
+        Choose how you&apos;d like to receive job matches.
       </p>
 
-      {!profileComplete && (
-        <p className="text-amber-600 text-xs mt-2">
-          Please complete your profile (phone number and at least one job preference) to enable alerts.
+      {!hasPreferences && (
+        <div className="border-border bg-muted/30 mt-4 rounded-xl border p-4">
+          <p className="text-sm font-semibold">
+            Set your preferred job categories and locations in your Profile to see jobs matched for
+            you.
+          </p>
+          <button
+            onClick={onSwitchToProfile}
+            className="bg-brand mt-3 rounded-lg px-4 py-2 text-xs font-bold text-white"
+          >
+            Go to Profile
+          </button>
+        </div>
+      )}
+
+      {hasPreferences && !profileComplete && (
+        <p className="mt-2 text-xs text-amber-600">
+          Please add your phone number in your Profile to enable WhatsApp alerts.
         </p>
       )}
+
 
       <div className="mt-3 flex flex-wrap gap-3">
         {(["dashboard", "whatsapp", "both"] as const).map((option) => {
