@@ -10,9 +10,9 @@ import {
 } from "@/lib/admin";
 
 const METHODS = [
-  { value: "website", label: "Website" },
+  { value: "auto_apply_supported", label: "Website" },
   { value: "email_only", label: "Email only" },
-  { value: "personal_account", label: "Requires personal account on employer site" },
+  { value: "requires_personal_account", label: "Requires personal account on employer site" },
 ] as const;
 
 const BASE_DOCS = [
@@ -120,7 +120,7 @@ export function JobForm({
     requirements: initial?.requirements ?? "",
     other_details: initial?.other_details ?? "",
     application_instructions: initial?.application_instructions ?? "",
-    application_method: initial?.application_method ?? "website",
+    application_method: initial?.application_method ?? "auto_apply_supported",
     official_link: initial?.official_link ?? "",
     application_email: initial?.application_email ?? "",
     opens_externally: initial?.opens_externally ?? false,
