@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
@@ -16,13 +16,14 @@ import { PlanSection } from "@/components/dashboard/PlanSection";
 import { BillingSection } from "@/components/dashboard/BillingSection";
 import { DocumentsSection } from "@/components/dashboard/DocumentsSection";
 import { OtherServicesCards } from "@/components/site/OtherServicesCards";
-import { JobCard } from "@/components/jobs/JobCard";
-import { jobsQueryOptions, type JobRow } from "@/lib/jobs";
-import { Target } from "lucide-react";
+import { JobFeed } from "@/components/jobs/JobFeed";
+import { createDashboardCancelInquiry } from "@/lib/alert-inquiries";
 
-// ---- Tab definitions (reordered) ----
+const ADMIN_WHATSAPP = "+256772702263";
+
+// ---- Tab definitions ----
 const TAB_IDS = {
-  "job-listing": "job-listing",   // first now
+  "job-listing": "job-listing",
   "bill-plans": "bill-plans",
   targeted: "targeted",
   documents: "documents",
@@ -33,7 +34,7 @@ type TabId = (typeof TAB_IDS)[keyof typeof TAB_IDS];
 
 function buildTabs(hasActivePlan: boolean) {
   const tabs: { id: TabId; label: string }[] = [
-    { id: "job-listing", label: "Job Listing" },   // first tab
+    { id: "job-listing", label: "Job Listing" },
     { id: "bill-plans", label: "Bill & Plans" },
   ];
   if (hasActivePlan) {
@@ -47,6 +48,7 @@ function buildTabs(hasActivePlan: boolean) {
   return tabs;
 }
 
+// ---- Route ----
 export const Route = createFileRoute("/dashboard")({
   ssr: false,
   head: () => ({
@@ -69,7 +71,7 @@ export const Route = createFileRoute("/dashboard")({
 function DashboardPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<TabId>("job-listing");   // default to job listing
+  const [tab, setTab] = useState<TabId>("job-listing");
 
   useEffect(() => {
     if (!loading && !user) {
@@ -133,7 +135,9 @@ function DashboardPage() {
         </div>
 
         <div className="mt-6">
-          {tab === "job-listing" && <JobListingPanel userId={user.id} />}
+          {tab === "job-listing" && (
+            <DashboardJobListing userId={user.id} />
+          )}
           {tab === "bill-plans" && (
             <>
               <PlanSection sub={sub} />
@@ -163,6 +167,37 @@ function DashboardPage() {
       </main>
       <Footer />
     </div>
+  );
+}
+
+// ---- Dashboard Job Listing: targeted IDs + JobFeed ----
+function DashboardJobListing({ userId }: { userId: string }) {
+  const subQuery = useQuery({
+    ...subscriptionQueryOptions(),
+    enabled: !!userId,
+  });
+  const profileQuery = useQuery({
+    ...profileQueryOptions(userId),
+    enabled: !!userId,
+  });
+
+  const hasActivePlan = subQuery.data && (subQuery.data.status === "trial" || subQuery.data.status === "active");
+  const preferredCategories = profileQuery.data?.preferred_categories ?? [];
+  const preferredLocations = profileQuery.data?.preferred_locations ?? [];
+
+  const targetedJobsQuery = useQuery({
+    queryKey: ["targeted-jobs", userId],
+    queryFn: () => fetchTargetedJobs(preferredCategories, preferredLocations),
+    enabled: !!userId && hasActivePlan && (preferredCategories.length > 0 || preferredLocations.length > 0),
+    staleTime: 30_000,
+  });
+
+  const targetedIds = targetedJobsQuery.data?.map((job) => job.id) ?? [];
+
+  return (
+    <Suspense fallback={<p className="text-muted-foreground text-sm">Loading jobs…</p>}>
+      <JobFeed prioritizedJobIds={targetedIds} />
+    </Suspense>
   );
 }
 
@@ -207,37 +242,32 @@ function TargetedJobsPanel({
     }
   };
 
-  // Cancel simply discards the pending choice — no WhatsApp, no inquiry row.
-  const handleCancel = () => setPendingDelivery(null);
+  const handleCancel = async () => {
+    if (!pendingDelivery) return;
+    const userFullName = profile?.full_name ?? "User";
+    if (pendingDelivery === "whatsapp" || pendingDelivery === "both") {
+      const msg = encodeURIComponent(
+        `${userFullName} cancelled a WhatsApp job alert request (pending choice: ${pendingDelivery}).`
+      );
+      window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${msg}`, "_blank");
+    } else if (pendingDelivery === "dashboard") {
+      await createDashboardCancelInquiry().catch(console.error);
+    }
+    setPendingDelivery(null);
+  };
 
   return (
     <div className="border-border rounded-2xl border bg-white p-5">
       <h3 className="font-display text-sm font-bold">Job alert delivery</h3>
       <p className="text-muted-foreground mt-1 text-xs">
-        Choose how you&apos;d like to receive job matches.
+        Choose how you'd like to receive job matches.
       </p>
 
-      {!hasPreferences && (
-        <div className="border-border bg-muted/30 mt-4 rounded-xl border p-4">
-          <p className="text-sm font-semibold">
-            Set your preferred job categories and locations in your Profile to see jobs matched for
-            you.
-          </p>
-          <button
-            onClick={onSwitchToProfile}
-            className="bg-brand mt-3 rounded-lg px-4 py-2 text-xs font-bold text-white"
-          >
-            Go to Profile
-          </button>
-        </div>
-      )}
-
-      {hasPreferences && !profileComplete && (
-        <p className="mt-2 text-xs text-amber-600">
-          Please add your phone number in your Profile to enable WhatsApp alerts.
+      {!profileComplete && (
+        <p className="text-amber-600 text-xs mt-2">
+          Please complete your profile (phone number and at least one job preference) to enable alerts.
         </p>
       )}
-
 
       <div className="mt-3 flex flex-wrap gap-3">
         {(["dashboard", "whatsapp", "both"] as const).map((option) => {
@@ -311,112 +341,6 @@ function TargetedJobsPanel({
               : "If you cancel, the admin will be notified in the portal."}
           </p>
         </div>
-      )}
-    </div>
-  );
-}
-
-// ---- Job Listing Panel (same cards as homepage) ----
-function JobListingPanel({ userId }: { userId: string }) {
-  const allJobsQuery = useQuery(jobsQueryOptions());
-  const subQuery = useQuery({ ...subscriptionQueryOptions(), enabled: !!userId });
-  const profileQuery = useQuery({ ...profileQueryOptions(userId), enabled: !!userId });
-  const navigate = useNavigate();
-
-  const sub = subQuery.data ?? null;
-  const hasActivePlan = !!sub && (sub.status === "trial" || sub.status === "active");
-  const preferredCategories = profileQuery.data?.preferred_categories ?? [];
-  const preferredLocations = profileQuery.data?.preferred_locations ?? [];
-  const hasPreferences = preferredCategories.length > 0 || preferredLocations.length > 0;
-
-  const targetedJobsQuery = useQuery({
-    queryKey: ["targeted-jobs", userId],
-    queryFn: () => fetchTargetedJobs(preferredCategories, preferredLocations),
-    enabled: !!userId && hasActivePlan && hasPreferences,
-    staleTime: 30_000,
-  });
-
-  const targetedJobs: JobRow[] = targetedJobsQuery.data ?? [];
-  const allJobs: JobRow[] = allJobsQuery.data ?? [];
-  const targetedIds = new Set(targetedJobs.map((j) => j.id));
-  const otherJobs = allJobs.filter((j) => !targetedIds.has(j.id));
-  const isFreePlan = !hasActivePlan;
-
-  return (
-    <div>
-      <h2 className="font-display text-lg font-bold">Job Listings</h2>
-      <p className="text-muted-foreground mt-1 text-xs">
-        Find work that matches your preferences, or browse all open positions.
-      </p>
-
-      {isFreePlan ? (
-        <section className="mt-6 rounded-2xl border border-brand/20 bg-brand/[0.03] p-5">
-          <div className="flex items-start gap-4">
-            <div className="rounded-xl bg-brand/10 p-3">
-              <Target className="size-6 text-brand" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-display text-base font-bold">Get jobs matched for you</h3>
-              <p className="text-muted-foreground mt-1 text-xs">
-                Tell us your preferred categories and locations, and we&apos;ll send matching
-                openings straight to your WhatsApp or dashboard — so you never miss an
-                opportunity.
-              </p>
-              <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
-                <li className="flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-brand" />
-                  Pick the job categories and locations you want
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-brand" />
-                  Get alerts on WhatsApp or right here in your dashboard
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-brand" />
-                  Apply faster with everything in one place
-                </li>
-              </ul>
-              <button
-                onClick={() => navigate({ to: "/plans", search: { feature: "targeted-jobs" } })}
-                className="bg-brand mt-4 rounded-lg px-4 py-2 text-xs font-bold text-white"
-              >
-                Try it out
-              </button>
-            </div>
-          </div>
-        </section>
-      ) : (
-        targetedJobs.length > 0 && (
-          <section className="mt-6">
-            <h3 className="font-display text-base font-semibold">Jobs for You</h3>
-            <p className="text-muted-foreground mt-1 text-xs">
-              Based on your preferred categories and locations.
-            </p>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {targetedJobs.map((job) => (
-                <JobCard key={job.id} job={job} />
-              ))}
-            </div>
-          </section>
-        )
-      )}
-
-      <section className="mt-8">
-        <h3 className="font-display text-base font-semibold">
-          {targetedJobs.length > 0 && hasActivePlan ? "All Other Jobs" : "All Jobs"}
-        </h3>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {otherJobs.map((job) => (
-            <JobCard key={job.id} job={job} />
-          ))}
-        </div>
-      </section>
-
-      {allJobsQuery.isPending && (
-        <p className="text-muted-foreground mt-6 text-sm">Loading jobs…</p>
-      )}
-      {!allJobsQuery.isPending && allJobs.length === 0 && (
-        <p className="text-muted-foreground mt-6 text-sm">No jobs available at the moment.</p>
       )}
     </div>
   );
