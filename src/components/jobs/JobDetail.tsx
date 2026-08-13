@@ -12,9 +12,17 @@ import {
   Briefcase,
   Share2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { daysRemaining, deadlineLabel, initialsOf, jobSlug, reportJob, type JobRow } from "@/lib/jobs";
+import {
+  daysRemaining,
+  deadlineLabel,
+  initialsOf,
+  jobSlug,
+  reportJob,
+  incrementJobView,
+  type JobRow,
+} from "@/lib/jobs";
 import { useAuth } from "@/lib/auth";
 
 const REASONS = ["Scam or fraudulent", "Expired or filled", "Wrong information", "Duplicate posting", "Other"];
@@ -28,13 +36,23 @@ export function JobDetail({ job }: { job: JobRow }) {
   const [reportOpen, setReportOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const countedView = useRef<string | null>(null);
+  const [views, setViews] = useState(job.views_count);
+
+  useEffect(() => {
+    if (!job?.id || countedView.current === job.id) return;
+    countedView.current = job.id;
+    incrementJobView(job.id)
+      .then(() => setViews(job.views_count + 1))
+      .catch(() => {});
+  }, [job.id]);
+
   const path = `/jobs/${jobSlug(job)}`;
   const shareUrl = typeof window !== "undefined" ? `${window.location.origin}${path}` : path;
 
   function handleApply() {
     if (loading) return;
     if (!user) {
-      // Login-gated: come straight back to THIS job after auth.
       navigate({ to: "/auth/login", search: { redirect: path } });
       return;
     }
@@ -75,7 +93,7 @@ export function JobDetail({ job }: { job: JobRow }) {
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <Chip icon={<MapPin className="size-3.5" />} text={job.locations?.name ?? "Uganda"} />
         <Chip icon={<Briefcase className="size-3.5" />} text={job.job_types?.name ?? "—"} />
-        <Chip icon={<Eye className="size-3.5" />} text={`${job.views_count} views`} />
+        <Chip icon={<Eye className="size-3.5" />} text={`${views} views`} />
         {job.categories?.name && <Chip text={job.categories.name} />}
         <span
           className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
@@ -127,17 +145,11 @@ export function JobDetail({ job }: { job: JobRow }) {
       </div>
 
       {applyOpen && <ApplyProcedure job={job} />}
-
-
       {reportOpen && <ReportForm jobId={job.id} onClose={() => setReportOpen(false)} />}
     </article>
   );
 }
 
-/**
- * Inline application procedure — the ONLY path to the official link or the
- * email action. "Apply" never jumps straight out to official_link.
- */
 function ApplyProcedure({ job }: { job: JobRow }) {
   const emailOnly = job.application_method === "email_only";
   const instructions = job.application_instructions?.trim();
@@ -194,8 +206,6 @@ function ApplyProcedure({ job }: { job: JobRow }) {
     </div>
   );
 }
-
-
 
 function Chip({ icon, text }: { icon?: React.ReactNode; text: string }) {
   return (
