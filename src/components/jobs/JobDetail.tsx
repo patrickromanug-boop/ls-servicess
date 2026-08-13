@@ -26,6 +26,7 @@ import {
 import { useAuth } from "@/lib/auth";
 
 const REASONS = ["Scam or fraudulent", "Expired or filled", "Wrong information", "Duplicate posting", "Other"];
+const ANON_VIEW_KEY = "ls_anon_viewer_id";
 
 export function JobDetail({ job }: { job: JobRow }) {
   const days = daysRemaining(job.deadline);
@@ -39,13 +40,28 @@ export function JobDetail({ job }: { job: JobRow }) {
   const countedView = useRef<string | null>(null);
   const [views, setViews] = useState(job.views_count);
 
+  // Get or create a persistent anonymous ID (localStorage)
+  function getAnonId() {
+    let id = localStorage.getItem(ANON_VIEW_KEY);
+    if (!id) {
+      id = crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      localStorage.setItem(ANON_VIEW_KEY, id);
+    }
+    return id;
+  }
+
   useEffect(() => {
     if (!job?.id || countedView.current === job.id) return;
     countedView.current = job.id;
-    incrementJobView(job.id)
-      .then(() => setViews(job.views_count + 1))
+
+    const viewerKey = user ? `user:${user.id}` : `anon:${getAnonId()}`;
+    incrementJobView(job.id, viewerKey)
+      .then(() => {
+        // Only increment the displayed count for the first view by this visitor.
+        setViews(job.views_count + 1);
+      })
       .catch(() => {});
-  }, [job.id]);
+  }, [job.id, user?.id]);
 
   const path = `/jobs/${jobSlug(job)}`;
   const shareUrl = typeof window !== "undefined" ? `${window.location.origin}${path}` : path;
