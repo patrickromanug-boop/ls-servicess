@@ -55,21 +55,18 @@ function LoginPage() {
       return;
     }
 
-    // Determine if this is a first-time login (no subscription row)
+    // Determine if first-time login (no subscription row) or returning user
     try {
       const sub = await fetchWebSubscription();
       setBusy(false);
       if (!sub) {
-        // New user: go to plan selection
         navigate({ to: "/plans", replace: true });
       } else {
-        // Returning user: go to dashboard
         navigate({ to: "/dashboard", replace: true });
       }
     } catch {
-      // Fallback to dashboard if fetch fails; dashboard will also redirect to plans if needed
       setBusy(false);
-      navigate({ to: "/dashboard", replace: true });
+      navigate({ to: "/dashboard", replace: true }); // dashboard will redirect if needed
     }
   }
 
