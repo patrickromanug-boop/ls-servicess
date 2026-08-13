@@ -1,11 +1,12 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { ChevronDown, Search, SearchX } from "lucide-react";
+import { ChevronDown, Search, SearchX, MessageCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { JobCard } from "./JobCard";
 import { jobsQueryOptions, type JobRow } from "@/lib/jobs";
 import { supabase } from "@/lib/supabase";
 
 const ALL = "all";
+const ADMIN_WHATSAPP = "+256772702263";
 
 // Fetch all available categories
 async function fetchAllCategories() {
@@ -40,11 +41,10 @@ async function fetchAllJobTypes() {
 export function JobFeed() {
   const { data: jobs } = useSuspenseQuery(jobsQueryOptions());
 
-  // Fetch full lists of filter options from the database
   const { data: categoriesData = [] } = useQuery({
     queryKey: ["categories"],
     queryFn: fetchAllCategories,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: locationsData = [] } = useQuery({
@@ -65,7 +65,6 @@ export function JobFeed() {
   const [location, setLocation] = useState(ALL);
   const [jobType, setJobType] = useState(ALL);
 
-  // Extract names from the fetched data
   const categoryOptions = useMemo(
     () => categoriesData.map((c: any) => c.name),
     [categoriesData]
@@ -97,6 +96,25 @@ export function JobFeed() {
   }, [jobs, query, category, location, jobType]);
 
   const activeFilters = [category, location, jobType].filter((v) => v !== ALL).length;
+
+  // Build the WhatsApp message for the empty state
+  const buildRequestMessage = () => {
+    const parts: string[] = [];
+    if (query.trim()) parts.push(`I'm looking for: ${query.trim()}`);
+    if (category !== ALL) parts.push(`Category: ${category}`);
+    if (location !== ALL) parts.push(`Location: ${location}`);
+    if (jobType !== ALL) parts.push(`Job type: ${jobType}`);
+    if (parts.length === 0) parts.push("I'm looking for a job");
+    return (
+      "Hi LS Services! I couldn't find a job that matches my search.\n\n" +
+      parts.join("\n") +
+      "\n\nPlease help me find or post a suitable job."
+    );
+  };
+
+  const whatsappUrl = `https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(
+    buildRequestMessage()
+  )}`;
 
   return (
     <div>
@@ -174,6 +192,15 @@ export function JobFeed() {
           <p className="text-muted-foreground mt-1 text-sm">
             Try a different keyword or clear your filters to see all open jobs.
           </p>
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand/90"
+          >
+            <MessageCircle className="size-4" />
+            Request this job on WhatsApp
+          </a>
         </div>
       ) : (
         <div className="mt-4 grid gap-3">
