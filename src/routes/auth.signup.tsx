@@ -75,13 +75,10 @@ function SignupPage() {
       toast.error(error.message);
       return;
     }
-    // With email confirmation enabled, there is no session yet.
     if (!data.session) {
       setSent(true);
       return;
     }
-    // Save the profile (phone drives the trial-abuse check), create the trial
-    // row, then send them to the plans screen before the dashboard.
     try {
       await updateProfile(data.user!.id, {
         full_name: parsed.data.fullName,
@@ -89,7 +86,7 @@ function SignupPage() {
       });
       await ensureWebSubscription();
     } catch {
-      // Non-fatal: the plans screen retries this.
+      // non-fatal
     }
     navigate({ to: "/plans", replace: true });
   }
