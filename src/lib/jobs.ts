@@ -28,6 +28,11 @@ export const APPLY_COLUMNS = "application_instructions,application_email";
 
 export const SELECT_COLUMNS = `${BASE_COLUMNS},${APPLY_COLUMNS}`;
 
+/** Returns today's date in YYYY-MM-DD format (UTC). */
+export function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export function slugify(value: string) {
   return value
     .toLowerCase()
@@ -72,11 +77,13 @@ function isMissingColumn(error: { code?: string } | null) {
 }
 
 export async function fetchJobs(): Promise<JobRow[]> {
+  const today = todayISO();
   const query = (columns: string) =>
     supabase
       .from("jobs")
       .select(columns)
       .eq("status", "active")
+      .gte("deadline", today)          // only show jobs whose deadline hasn't passed
       .order("created_at", { ascending: false })
       .limit(300);
 
@@ -87,8 +94,15 @@ export async function fetchJobs(): Promise<JobRow[]> {
 }
 
 export async function fetchJobById(id: string): Promise<JobRow | null> {
+  const today = todayISO();
   const query = (columns: string) =>
-    supabase.from("jobs").select(columns).eq("id", id).maybeSingle();
+    supabase
+      .from("jobs")
+      .select(columns)
+      .eq("id", id)
+      .eq("status", "active")          // hidden if not active
+      .gte("deadline", today)          // hidden if deadline has passed
+      .maybeSingle();
 
   let { data, error } = await query(SELECT_COLUMNS);
   if (isMissingColumn(error)) ({ data, error } = await query(BASE_COLUMNS));
