@@ -1,10 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { CalendarClock, Sparkles } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Card } from "./ProfileSection";
 import {
   trialDaysLeft,
   isTrialActive,
   documentsRemaining,
+  fetchPendingPlanRequest,
   type WebSubscription,
 } from "@/lib/account";
 import { planByTier } from "@/lib/plans";
@@ -13,6 +15,34 @@ export function PlanSection({ sub }: { sub: WebSubscription | null }) {
   const trialing = isTrialActive(sub);
   const plan = sub?.tier ? planByTier(sub.tier) : null;
   const remaining = documentsRemaining(sub);
+
+  // Check for a pending plan request
+  const { data: pendingRequest } = useQuery({
+    queryKey: ["plan_requests", "pending"],
+    queryFn: fetchPendingPlanRequest,
+    staleTime: 30_000,
+  });
+
+  if (pendingRequest) {
+    const requestedPlan = planByTier(pendingRequest.requested_tier);
+    return (
+      <Card title="Your plan">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm font-semibold text-amber-800">Pending approval</p>
+          <p className="mt-1 text-sm text-amber-700">
+            Your request for <strong>{requestedPlan.name}</strong> is awaiting confirmation.
+            We’ll activate your plan as soon as payment is verified.
+          </p>
+          <Link
+            to="/plans"
+            className="text-brand mt-3 inline-block text-sm font-semibold"
+          >
+            View plans
+          </Link>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card title="Your plan">
