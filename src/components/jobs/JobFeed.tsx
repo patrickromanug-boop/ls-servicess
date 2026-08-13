@@ -171,7 +171,6 @@ export function JobFeed({ prioritizedJobIds = [] }: { prioritizedJobIds?: string
           />
         </button>
       </div>
-      </div>
 
       {showFilters && (
         <div className="border-border bg-muted/45 mt-3 grid gap-3 rounded-xl border p-4 sm:grid-cols-3">
