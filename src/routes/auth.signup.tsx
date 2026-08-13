@@ -67,7 +67,7 @@ function SignupPage() {
       password: parsed.data.password,
       options: {
         data: { full_name: parsed.data.fullName, phone: parsed.data.phone },
-        emailRedirectTo: `${window.location.origin}${safeRedirect}`,
+        emailRedirectTo: `${window.location.origin}/plans`,
       },
     });
     setBusy(false);
@@ -105,7 +105,7 @@ function SignupPage() {
           </p>
           <Link
             to="/auth/login"
-            search={{ redirect: safeRedirect }}
+            search={{ redirect: "/plans" }}
             className="bg-brand text-brand-foreground mt-5 block rounded-lg py-3 text-center text-sm font-bold"
           >
             Go to sign in
@@ -174,13 +174,13 @@ function SignupPage() {
           <span className="bg-border h-px flex-1" />
         </div>
 
-        <GoogleButton onClick={() => signInWithGoogle(safeRedirect)} label="Sign up with Google" />
+        <GoogleButton onClick={() => signInWithGoogle("/dashboard")} label="Sign up with Google" />
 
         <p className="text-muted-foreground mt-5 text-center text-sm">
           Already have an account?{" "}
           <Link
             to="/auth/login"
-            search={{ redirect: safeRedirect }}
+            search={{ redirect: "/plans" }}
             className="text-brand font-semibold"
           >
             Sign in
