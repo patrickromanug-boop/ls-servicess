@@ -53,18 +53,18 @@ export function JobCard({ job }: { job: JobRow }) {
       to="/jobs/$jobSlug"
       params={{ jobSlug: jobSlug(job) }}
       state={{ jobModal: true } as never}
-      className="border-border hover:border-brand block rounded-xl border bg-card p-4 transition-colors"
+      className="border-border hover:border-brand group block rounded-2xl border bg-card p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-3.5">
         <BrandLogo job={job} />
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-base font-semibold">{job.title}</h3>
+          <h3 className="truncate text-base font-bold transition-colors group-hover:text-brand">{job.title}</h3>
           <p className="text-muted-foreground mt-0.5 flex items-center gap-1.5 truncate text-sm">
             <Building2 className="size-3.5 shrink-0" />
             {job.organization}
           </p>
 
-          <div className="text-muted-foreground mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
+          <div className="text-muted-foreground mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border/70 pt-3 text-xs">
             <span className="flex items-center gap-1.5">
               <MapPin className="size-3.5" />
               {job.locations?.name ?? "Uganda"}
