@@ -38,7 +38,7 @@ async function fetchAllJobTypes() {
   return data ?? [];
 }
 
-export function JobFeed() {
+export function JobFeed({ prioritizedJobIds = [] }: { prioritizedJobIds?: string[] }) {
   const { data: jobs } = useSuspenseQuery(jobsQueryOptions());
 
   const { data: categoriesData = [] } = useQuery({
@@ -80,7 +80,7 @@ export function JobFeed() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return jobs.filter((job: JobRow) => {
+    const filteredJobs = jobs.filter((job: JobRow) => {
       const matchesQuery =
         !q ||
         job.title.toLowerCase().includes(q) ||
@@ -93,7 +93,19 @@ export function JobFeed() {
         (jobType === ALL || job.job_types?.name === jobType)
       );
     });
-  }, [jobs, query, category, location, jobType]);
+
+    // If prioritizedJobIds provided, sort those first (preserving original order otherwise)
+    if (prioritizedJobIds.length > 0) {
+      const prioritySet = new Set(prioritizedJobIds);
+      return filteredJobs.sort((a, b) => {
+        const aPriority = prioritySet.has(a.id) ? 0 : 1;
+        const bPriority = prioritySet.has(b.id) ? 0 : 1;
+        return aPriority - bPriority;
+      });
+    }
+
+    return filteredJobs;
+  }, [jobs, query, category, location, jobType, prioritizedJobIds]);
 
   const activeFilters = [category, location, jobType].filter((v) => v !== ALL).length;
 
