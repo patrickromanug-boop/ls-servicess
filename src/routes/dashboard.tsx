@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Suspense, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Header } from "@/components/site/Header";
@@ -136,7 +136,10 @@ function DashboardPage() {
 
         <div className="mt-6">
           {tab === "job-listing" && (
-            <DashboardJobListing userId={user.id} />
+            <JobListingTab
+              userId={user.id}
+              hasActivePlan={!!hasActivePlan}
+            />
           )}
           {tab === "bill-plans" && (
             <>
@@ -170,8 +173,14 @@ function DashboardPage() {
   );
 }
 
-// ---- Dashboard Job Listing: targeted IDs + JobFeed ----
-function DashboardJobListing({ userId }: { userId: string }) {
+// ---- Job Listing tab: upsell (free users) + JobFeed ----
+function JobListingTab({
+  userId,
+  hasActivePlan,
+}: {
+  userId: string;
+  hasActivePlan: boolean;
+}) {
   const subQuery = useQuery({
     ...subscriptionQueryOptions(),
     enabled: !!userId,
@@ -181,23 +190,45 @@ function DashboardJobListing({ userId }: { userId: string }) {
     enabled: !!userId,
   });
 
-  const hasActivePlan = subQuery.data && (subQuery.data.status === "trial" || subQuery.data.status === "active");
   const preferredCategories = profileQuery.data?.preferred_categories ?? [];
   const preferredLocations = profileQuery.data?.preferred_locations ?? [];
 
   const targetedJobsQuery = useQuery({
     queryKey: ["targeted-jobs", userId],
     queryFn: () => fetchTargetedJobs(preferredCategories, preferredLocations),
-    enabled: !!userId && hasActivePlan && (preferredCategories.length > 0 || preferredLocations.length > 0),
+    enabled:
+      !!userId &&
+      hasActivePlan &&
+      (preferredCategories.length > 0 || preferredLocations.length > 0),
     staleTime: 30_000,
   });
 
   const targetedIds = targetedJobsQuery.data?.map((job) => job.id) ?? [];
 
   return (
-    <Suspense fallback={<p className="text-muted-foreground text-sm">Loading jobs…</p>}>
-      <JobFeed prioritizedJobIds={targetedIds} />
-    </Suspense>
+    <div>
+      {/* Upsell for free users: shown before search/filter and disappears after choosing a plan */}
+      {!hasActivePlan && (
+        <div className="border-border rounded-2xl border bg-white p-5 mb-6">
+          <h3 className="font-display text-sm font-bold">Get jobs matched for you</h3>
+          <p className="text-muted-foreground mt-1 text-xs">
+            Upgrade to a plan and tell us your preferences. We’ll highlight jobs that match
+            your skills and location — right at the top of this list.
+          </p>
+          <Link
+            to="/plans"
+            search={{ feature: "targeted-jobs" }}
+            className="mt-3 inline-block rounded-lg bg-brand px-4 py-2 text-xs font-bold text-white"
+          >
+            Try it out
+          </Link>
+        </div>
+      )}
+
+      <Suspense fallback={<p className="text-muted-foreground text-sm">Loading jobs…</p>}>
+        <JobFeed prioritizedJobIds={targetedIds} />
+      </Suspense>
+    </div>
   );
 }
 
