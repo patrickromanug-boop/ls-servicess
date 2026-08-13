@@ -1,6 +1,48 @@
 import { Link } from "@tanstack/react-router";
 import { Building2, Eye, MapPin, Briefcase } from "lucide-react";
+import { useState } from "react";
 import { daysRemaining, deadlineLabel, initialsOf, jobSlug, type JobRow } from "@/lib/jobs";
+
+/**
+ * Returns a Google favicon service URL for a given official link.
+ * If the link is missing/invalid, returns null so the caller can fall back.
+ */
+function getFaviconUrl(officialLink: string | null | undefined): string | null {
+  if (!officialLink) return null;
+  try {
+    const domain = new URL(officialLink).hostname;
+    if (!domain) return null;
+    return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`;
+  } catch {
+    return null;
+  }
+}
+
+/** Renders the favicon or initials badge for a job. */
+function BrandLogo({ job }: { job: JobRow }) {
+  const [failed, setFailed] = useState(false);
+  const favicon = getFaviconUrl(job.official_link);
+
+  if (!favicon || failed) {
+    return (
+      <span className="bg-brand-soft text-brand font-display grid size-11 shrink-0 place-items-center rounded-lg text-sm font-bold">
+        {initialsOf(job.organization)}
+      </span>
+    );
+  }
+
+  return (
+    <img
+      src={favicon}
+      alt=""
+      width={44}
+      height={44}
+      loading="lazy"
+      className="size-11 shrink-0 rounded-lg border border-border bg-white object-contain"
+      onError={() => setFailed(true)}
+    />
+  );
+}
 
 export function JobCard({ job }: { job: JobRow }) {
   const days = daysRemaining(job.deadline);
@@ -14,9 +56,7 @@ export function JobCard({ job }: { job: JobRow }) {
       className="border-border hover:border-brand block rounded-xl border bg-card p-4 transition-colors"
     >
       <div className="flex items-start gap-3">
-        <span className="bg-brand-soft text-brand font-display grid size-11 shrink-0 place-items-center rounded-lg text-sm font-bold">
-          {initialsOf(job.organization)}
-        </span>
+        <BrandLogo job={job} />
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-base font-semibold">{job.title}</h3>
           <p className="text-muted-foreground mt-0.5 flex items-center gap-1.5 truncate text-sm">
