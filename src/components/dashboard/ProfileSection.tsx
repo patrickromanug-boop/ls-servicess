@@ -1,18 +1,48 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AlertTriangle, KeyRound, Save, Trash2 } from "lucide-react";
+import { AlertTriangle, Check, ChevronDown, KeyRound, Save, Trash2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { deleteAccount, profileQueryOptions, updateProfile } from "@/lib/account";
-import { jobsQueryOptions } from "@/lib/jobs";
+
+// Fetch all available categories
+async function fetchAllCategories() {
+  const { data, error } = await supabase
+    .from("categories")
+    .select("id, name")
+    .order("name");
+  if (error) throw error;
+  return data ?? [];
+}
+
+// Fetch all available locations
+async function fetchAllLocations() {
+  const { data, error } = await supabase
+    .from("locations")
+    .select("id, name")
+    .order("name");
+  if (error) throw error;
+  return data ?? [];
+}
 
 export function ProfileSection({ user }: { user: User }) {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const profileQuery = useQuery(profileQueryOptions(user.id));
-  const jobsQuery = useQuery(jobsQueryOptions());
+
+  // Fetch full lists of options from the database
+  const { data: categoriesData = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: fetchAllCategories,
+    staleTime: 5 * 60 * 1000,
+  });
+  const { data: locationsData = [] } = useQuery({
+    queryKey: ["locations"],
+    queryFn: fetchAllLocations,
+    staleTime: 5 * 60 * 1000,
+  });
 
   const isGoogleAccount = user.app_metadata?.provider === "google";
 
@@ -32,15 +62,14 @@ export function ProfileSection({ user }: { user: User }) {
     setLocations(p.preferred_locations ?? []);
   }, [profileQuery.data, user]);
 
-  const { categoryOptions, locationOptions } = useMemo(() => {
-    const jobs = jobsQuery.data ?? [];
-    const uniq = (values: (string | undefined)[]) =>
-      Array.from(new Set(values.filter((v): v is string => !!v))).sort();
-    return {
-      categoryOptions: uniq(jobs.map((j) => j.categories?.name)),
-      locationOptions: uniq(jobs.map((j) => j.locations?.name)),
-    };
-  }, [jobsQuery.data]);
+  const categoryOptions = useMemo(
+    () => categoriesData.map((c: any) => c.name),
+    [categoriesData]
+  );
+  const locationOptions = useMemo(
+    () => locationsData.map((l: any) => l.name),
+    [locationsData]
+  );
 
   const save = useMutation({
     mutationFn: () =>
@@ -89,20 +118,24 @@ export function ProfileSection({ user }: { user: User }) {
           categories and locations you actually want to hear about.
         </p>
 
-        <ChipPicker
+        <MultiSelectDropdown
           label="Preferred categories"
           options={categoryOptions}
           selected={categories}
           onToggle={(v) =>
-            setCategories((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]))
+            setCategories((prev) =>
+              prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]
+            )
           }
         />
-        <ChipPicker
+        <MultiSelectDropdown
           label="Preferred locations"
           options={locationOptions}
           selected={locations}
           onToggle={(v) =>
-            setLocations((prev) => (prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]))
+            setLocations((prev) =>
+              prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]
+            )
           }
         />
 
@@ -219,7 +252,7 @@ function TextField({
   );
 }
 
-function ChipPicker({
+function MultiSelectDropdown({
   label,
   options,
   selected,
@@ -230,30 +263,59 @@ function ChipPicker({
   selected: string[];
   onToggle: (value: string) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
-    <div className="mt-4">
+    <div className="mt-4" ref={ref}>
       <span className="text-xs font-semibold">{label}</span>
-      {options.length === 0 ? (
-        <p className="text-muted-foreground mt-1 text-sm">No options available yet.</p>
-      ) : (
-        <div className="mt-2 flex flex-wrap gap-2">
-          {options.map((option) => {
-            const active = selected.includes(option);
-            return (
-              <button
-                key={option}
-                type="button"
-                onClick={() => onToggle(option)}
-                className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
-                  active
-                    ? "border-brand bg-brand text-brand-foreground"
-                    : "border-border text-muted-foreground hover:border-brand"
-                }`}
-              >
-                {option}
-              </button>
-            );
-          })}
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="border-border focus:border-brand mt-1 flex h-11 w-full items-center justify-between rounded-lg border bg-background px-3 text-sm outline-none"
+      >
+        <span className="truncate">
+          {selected.length > 0
+            ? `${selected.length} selected`
+            : "Select options"}
+        </span>
+        <ChevronDown className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="border-border mt-1 max-h-60 overflow-y-auto rounded-lg border bg-card p-2 shadow-sm">
+          {options.length === 0 ? (
+            <p className="text-muted-foreground p-2 text-sm">No options available.</p>
+          ) : (
+            options.map((option) => {
+              const active = selected.includes(option);
+              return (
+                <label
+                  key={option}
+                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted"
+                >
+                  <input
+                    type="checkbox"
+                    checked={active}
+                    onChange={() => onToggle(option)}
+                    className="accent-brand size-4"
+                  />
+                  <span className="flex-1">{option}</span>
+                  {active && <Check className="text-brand size-4" />}
+                </label>
+              );
+            })
+          )}
         </div>
       )}
     </div>
