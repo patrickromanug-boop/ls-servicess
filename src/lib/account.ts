@@ -2,7 +2,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "./supabase";
 import type { BillingCycle, DocumentType, Tier } from "./plans";
 import { planByTier, formatUgx } from "./plans";
-import { BASE_COLUMNS, APPLY_COLUMNS, type JobRow } from "./jobs";
+import { BASE_COLUMNS, APPLY_COLUMNS, todayISO, type JobRow } from "./jobs";
 
 export type WebSubscription = {
   id: string;
@@ -122,6 +122,7 @@ export async function fetchTargetedJobs(
   }
 
   const columns = `${BASE_COLUMNS},${APPLY_COLUMNS}`;
+  const today = todayISO();
 
   // Step 2: filter jobs directly by category_id / location_id (real FK columns)
   // Using .or() so a job matches if EITHER its category OR its location fits
@@ -137,6 +138,7 @@ export async function fetchTargetedJobs(
     .from("jobs")
     .select(columns)
     .eq("status", "active")
+    .gte("deadline", today)               // hide expired targeted jobs
     .or(orFilters.join(","))
     .order("created_at", { ascending: false })
     .limit(100);
@@ -146,6 +148,7 @@ export async function fetchTargetedJobs(
       .from("jobs")
       .select(BASE_COLUMNS)
       .eq("status", "active")
+      .gte("deadline", today)             // same filter in fallback
       .or(orFilters.join(","))
       .order("created_at", { ascending: false })
       .limit(100);
