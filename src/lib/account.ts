@@ -44,22 +44,39 @@ export type ProfileRow = {
   preferred_locations: string[] | null;
 };
 
+/** Turns a Postgres/PostgREST error into something a user can act on. */
+function rpcError(error: { message?: string; details?: string; hint?: string; code?: string }) {
+  const parts = [error.message, error.details, error.hint].filter(Boolean);
+  const text = parts.join(" — ") || "Something went wrong. Please try again.";
+  return new Error(text);
+}
+
 /** Creates the trial (or an immediately-expired row for repeat phone numbers). */
 export async function ensureWebSubscription(): Promise<WebSubscription> {
   const { data, error } = await supabase.rpc("web_ensure_subscription");
-  if (error) throw error;
+  if (error) throw rpcError(error);
   return data as WebSubscription;
 }
 
 export async function fetchWebSubscription(): Promise<WebSubscription | null> {
   const { data, error } = await supabase.from("web_subscriptions").select("*").maybeSingle();
-  if (error) throw error;
+  if (error) throw rpcError(error);
   return (data as WebSubscription) ?? null;
 }
 
 export async function selectPlan(tier: Tier, cycle: BillingCycle): Promise<WebSubscription> {
+  // Make sure the trial/subscription row (and the profile row it depends on)
+  // exists before saving the plan — new users can reach /plans before either
+  // has been created.
+  try {
+    await ensureWebSubscription();
+  } catch {
+    // web_select_plan ensures it too; ignore and let the real call report.
+  }
+
   const { data, error } = await supabase.rpc("web_select_plan", { _tier: tier, _cycle: cycle });
-  if (error) throw error;
+  if (error) throw rpcError(error);
+  if (!data) throw new Error("Your plan could not be saved. Please try again.");
   return data as WebSubscription;
 }
 
