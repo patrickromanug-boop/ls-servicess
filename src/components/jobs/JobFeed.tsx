@@ -143,21 +143,22 @@ export function JobFeed({ prioritizedJobIds = [] }: { prioritizedJobIds?: string
 
   return (
     <div>
+      <div className="rounded-2xl border border-border bg-card p-2 shadow-sm sm:p-2.5">
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+          <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search jobs, organizations, locations"
             aria-label="Search jobs"
-            className="border-border focus:border-brand h-11 w-full rounded-lg border bg-card pl-9 pr-3 text-sm outline-none"
+            className="border-border/80 focus:border-brand focus:ring-brand/10 h-11 w-full rounded-xl border bg-background pl-10 pr-3 text-sm outline-none transition-shadow focus:ring-4"
           />
         </div>
         <button
           onClick={() => setShowFilters((v) => !v)}
           aria-expanded={showFilters}
-          className="border-border hover:border-brand flex h-11 shrink-0 items-center gap-1.5 rounded-lg border px-4 text-sm font-semibold"
+          className="border-border hover:border-brand hover:bg-brand-soft flex h-11 shrink-0 items-center gap-1.5 rounded-xl border px-4 text-sm font-bold transition-colors"
         >
           Filters
           {activeFilters > 0 && (
@@ -170,9 +171,10 @@ export function JobFeed({ prioritizedJobIds = [] }: { prioritizedJobIds?: string
           />
         </button>
       </div>
+      </div>
 
       {showFilters && (
-        <div className="border-border bg-muted/40 mt-2 grid gap-3 rounded-lg border p-4 sm:grid-cols-3">
+        <div className="border-border bg-muted/45 mt-3 grid gap-3 rounded-xl border p-4 sm:grid-cols-3">
           <FilterSelect
             label="Category"
             value={category}
@@ -205,13 +207,14 @@ export function JobFeed({ prioritizedJobIds = [] }: { prioritizedJobIds?: string
           )}
         </div>
       )}
+      </div>
 
-      <p className="text-muted-foreground mt-6 text-sm font-semibold">
+      <p className="text-muted-foreground mt-7 text-sm font-semibold">
         {filtered.length} {filtered.length === 1 ? "job" : "jobs"} found
       </p>
 
       {filtered.length === 0 ? (
-        <div className="border-border mt-4 rounded-xl border border-dashed p-10 text-center">
+        <div className="border-border bg-card mt-4 rounded-2xl border border-dashed p-10 text-center">
           <SearchX className="text-muted-foreground mx-auto size-8" />
           <p className="mt-3 font-semibold">No jobs match your search</p>
           <p className="text-muted-foreground mt-1 text-sm">
@@ -221,7 +224,7 @@ export function JobFeed({ prioritizedJobIds = [] }: { prioritizedJobIds?: string
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand/90"
+            className="mt-4 inline-flex items-center gap-2 rounded-full bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand/90"
           >
             <MessageCircle className="size-4" />
             Request this job on WhatsApp
@@ -285,7 +288,7 @@ function FilterSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="border-border mt-1 h-10 w-full rounded-lg border bg-card px-2 text-sm outline-none"
+        className="border-border focus:border-brand mt-1 h-10 w-full rounded-xl border bg-card px-3 text-sm outline-none"
       >
         <option value={ALL}>All {label.toLowerCase()}s</option>
         {options.map((option) => (
