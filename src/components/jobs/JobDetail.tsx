@@ -28,6 +28,44 @@ import { useAuth } from "@/lib/auth";
 const REASONS = ["Scam or fraudulent", "Expired or filled", "Wrong information", "Duplicate posting", "Other"];
 const ANON_VIEW_KEY = "ls_anon_viewer_id";
 
+/** Returns a Google favicon service URL for a given official link. */
+function getFaviconUrl(officialLink: string | null | undefined): string | null {
+  if (!officialLink) return null;
+  try {
+    const domain = new URL(officialLink).hostname;
+    if (!domain) return null;
+    return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`;
+  } catch {
+    return null;
+  }
+}
+
+/** Renders the favicon or initials badge for the organization. */
+function BrandLogo({ job }: { job: JobRow }) {
+  const [failed, setFailed] = useState(false);
+  const favicon = getFaviconUrl(job.official_link);
+
+  if (!favicon || failed) {
+    return (
+      <span className="bg-brand-soft text-brand font-display grid size-14 shrink-0 place-items-center rounded-xl text-lg font-bold">
+        {initialsOf(job.organization)}
+      </span>
+    );
+  }
+
+  return (
+    <img
+      src={favicon}
+      alt=""
+      width={56}
+      height={56}
+      loading="lazy"
+      className="size-14 shrink-0 rounded-xl border border-border bg-white object-contain"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 export function JobDetail({ job }: { job: JobRow }) {
   const days = daysRemaining(job.deadline);
   const urgent = days <= 3;
@@ -57,7 +95,6 @@ export function JobDetail({ job }: { job: JobRow }) {
     const viewerKey = user ? `user:${user.id}` : `anon:${getAnonId()}`;
     incrementJobView(job.id, viewerKey)
       .then(() => {
-        // Only increment the displayed count for the first view by this visitor.
         setViews(job.views_count + 1);
       })
       .catch(() => {});
@@ -94,9 +131,7 @@ export function JobDetail({ job }: { job: JobRow }) {
   return (
     <article>
       <div className="flex items-start gap-3">
-        <span className="bg-brand-soft text-brand font-display grid size-14 shrink-0 place-items-center rounded-xl text-lg font-bold">
-          {initialsOf(job.organization)}
-        </span>
+        <BrandLogo job={job} />
         <div className="min-w-0 flex-1">
           <h1 className="text-xl font-bold sm:text-2xl">{job.title}</h1>
           <p className="text-muted-foreground mt-1 flex items-center gap-1.5 text-sm">
