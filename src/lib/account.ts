@@ -44,6 +44,16 @@ export type ProfileRow = {
   preferred_locations: string[] | null;
 };
 
+export type PlanRequestRow = {
+  id: string;
+  user_id: string;
+  requested_tier: Tier;
+  requested_billing_cycle: BillingCycle;
+  status: "pending" | "approved" | "rejected";
+  rejection_note: string | null;
+  created_at: string;
+};
+
 /** Turns a Postgres/PostgREST error into something a user can act on. */
 function rpcError(error: { message?: string; details?: string; hint?: string; code?: string }) {
   const parts = [error.message, error.details, error.hint].filter(Boolean);
@@ -64,10 +74,8 @@ export async function fetchWebSubscription(): Promise<WebSubscription | null> {
   return (data as WebSubscription) ?? null;
 }
 
+/** Legacy / direct plan selection (still works but new flow uses requestPlan). */
 export async function selectPlan(tier: Tier, cycle: BillingCycle): Promise<WebSubscription> {
-  // Make sure the trial/subscription row (and the profile row it depends on)
-  // exists before saving the plan — new users can reach /plans before either
-  // has been created.
   try {
     await ensureWebSubscription();
   } catch {
@@ -78,6 +86,27 @@ export async function selectPlan(tier: Tier, cycle: BillingCycle): Promise<WebSu
   if (error) throw rpcError(error);
   if (!data) throw new Error("Your plan could not be saved. Please try again.");
   return data as WebSubscription;
+}
+
+/** Create a pending plan request instead of activating immediately. */
+export async function requestPlan(tier: Tier, cycle: BillingCycle): Promise<PlanRequestRow> {
+  const { data, error } = await supabase.rpc("web_request_plan", {
+    _tier: tier,
+    _cycle: cycle,
+  });
+  if (error) throw rpcError(error);
+  return data as PlanRequestRow;
+}
+
+/** Fetch the current user's pending plan request, if any. */
+export async function fetchPendingPlanRequest(): Promise<PlanRequestRow | null> {
+  const { data, error } = await supabase
+    .from("plan_requests")
+    .select("*")
+    .eq("status", "pending")
+    .maybeSingle();
+  if (error) throw rpcError(error);
+  return (data as PlanRequestRow) ?? null;
 }
 
 /** Update alert delivery preference via secure RPC. */
