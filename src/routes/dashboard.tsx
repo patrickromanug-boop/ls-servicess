@@ -255,7 +255,7 @@ function JobListingTab({
   );
 }
 
-// ---- Targeted Jobs Panel (revised flow) ----
+// ---- Targeted Jobs Panel (revised: pending change with clear cancel) ----
 function TargetedJobsPanel({
   userId,
   subscription,
@@ -268,13 +268,12 @@ function TargetedJobsPanel({
   onSwitchToProfile: () => void;
 }) {
   const queryClient = useQueryClient();
-  const [displayDelivery, setDisplayDelivery] = useState(subscription?.alert_delivery ?? "dashboard");
-  const [selectedDelivery, setSelectedDelivery] = useState<"dashboard" | "whatsapp" | "both" | null>(null);
-  const [previousDelivery, setPreviousDelivery] = useState<"dashboard" | "whatsapp" | "both" | null>(null);
+  const [pendingChange, setPendingChange] = useState<{
+    from: "dashboard" | "whatsapp" | "both";
+    to: "dashboard" | "whatsapp" | "both";
+  } | null>(null);
 
-  useEffect(() => {
-    setDisplayDelivery(subscription?.alert_delivery ?? "dashboard");
-  }, [subscription?.alert_delivery]);
+  const currentDelivery = subscription?.alert_delivery ?? "dashboard";
 
   const phone = profile?.phone?.trim();
   const hasPreferences =
@@ -283,46 +282,45 @@ function TargetedJobsPanel({
   const profileComplete = !!phone && hasPreferences;
 
   const handleRadioClick = async (value: "dashboard" | "whatsapp" | "both") => {
-    if (!profileComplete) return; // shouldn't happen as radios are hidden, but safety
-    const prev = subscription?.alert_delivery ?? "dashboard";
-    setPreviousDelivery(prev);
-    setSelectedDelivery(value);
-    setDisplayDelivery(value);
+    if (!profileComplete) return;
+    const from = currentDelivery;
+    // Optimistically update UI via pendingChange
+    setPendingChange({ from, to: value });
     try {
       await updateAlertDelivery(value);
       queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
     } catch (err) {
       console.error(err);
-      // revert optimistic update on error
-      setDisplayDelivery(prev);
-      setSelectedDelivery(null);
-      setPreviousDelivery(null);
+      // Revert on error
+      setPendingChange(null);
     }
   };
 
   const handleCancel = async () => {
-    if (!selectedDelivery) return;
+    if (!pendingChange) return;
     const userFullName = profile?.full_name ?? "User";
-    if (selectedDelivery === "whatsapp" || selectedDelivery === "both") {
+    const { from, to } = pendingChange;
+
+    // Send appropriate admin notification
+    if (to === "whatsapp" || to === "both") {
       const msg = encodeURIComponent(
-        `${userFullName} cancelled a WhatsApp job alert request (pending choice: ${selectedDelivery}).`
+        `${userFullName} attempted to change job alert delivery from ${from} to ${to}, but cancelled. Current preference remains ${from}.`
       );
       window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${msg}`, "_blank");
-    } else if (selectedDelivery === "dashboard") {
+    } else if (to === "dashboard") {
       await createDashboardCancelInquiry().catch(console.error);
     }
-    // revert to previous delivery
-    if (previousDelivery) {
-      try {
-        await updateAlertDelivery(previousDelivery);
-        setDisplayDelivery(previousDelivery);
-        queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
-      } catch (err) {
-        console.error(err);
-      }
+
+    // Revert to previous delivery
+    try {
+      await updateAlertDelivery(from);
+      queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
+    } catch (err) {
+      console.error(err);
     }
-    setSelectedDelivery(null);
-    setPreviousDelivery(null);
+
+    // Clear pending change so UI returns to non-pending state
+    setPendingChange(null);
   };
 
   // If profile incomplete, show only a button to profile
@@ -352,12 +350,14 @@ function TargetedJobsPanel({
 
       <div className="mt-3 flex flex-wrap gap-3">
         {(["dashboard", "whatsapp", "both"] as const).map((option) => {
-          const isCurrent = displayDelivery === option;
+          const isCurrent = currentDelivery === option && !pendingChange;
+          const isPending = pendingChange?.to === option;
+          const selected = isCurrent || isPending;
           return (
             <label
               key={option}
               className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium cursor-pointer transition-colors ${
-                isCurrent
+                selected
                   ? "border-brand bg-brand/10 text-brand"
                   : "border-border text-muted-foreground hover:border-gray-400"
               }`}
@@ -366,7 +366,7 @@ function TargetedJobsPanel({
                 type="radio"
                 name="alert_delivery"
                 value={option}
-                checked={isCurrent}
+                checked={selected}
                 onChange={() => handleRadioClick(option)}
                 className="hidden"
               />
@@ -378,11 +378,11 @@ function TargetedJobsPanel({
         })}
       </div>
 
-      {/* Info panel shown after a selection is made */}
-      {selectedDelivery && (
+      {/* Info panel shown only when there is a pending change */}
+      {pendingChange && (
         <div className="mt-4 rounded-xl border border-brand/20 bg-brand/[0.03] p-4">
           <p className="text-xs font-medium">
-            Your current alert delivery: <strong className="capitalize">{displayDelivery}</strong>
+            You’ve selected: <strong className="capitalize">{pendingChange.to}</strong> (previously {pendingChange.from})
           </p>
           <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
             {profile?.full_name && <p>Name: {profile.full_name}</p>}
@@ -409,9 +409,7 @@ function TargetedJobsPanel({
             </button>
           </div>
           <p className="text-[11px] text-gray-400 mt-2">
-            {selectedDelivery !== "dashboard"
-              ? "If you cancel, the admin will be notified via WhatsApp."
-              : "If you cancel, the admin will be notified in the portal."}
+            If you cancel, your preference will return to {pendingChange.from}.
           </p>
         </div>
       )}
