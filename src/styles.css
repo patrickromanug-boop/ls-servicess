@@ -171,3 +171,20 @@
     letter-spacing: -0.02em;
   }
 }
+
+/* ===== Hide Lovable badge ===== */
+a[href*="lovable.dev"],
+a[href*="lovable.com"],
+[class*="lovable"],
+[id*="lovable"],
+[class*="Lovable"],
+[id*="Lovable"],
+iframe[src*="lovable"],
+button[class*="lovable"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
