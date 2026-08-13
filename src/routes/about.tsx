@@ -53,7 +53,7 @@ function AboutPage() {
       <Header />
       <main className="flex-1">
         <section className="page-grid border-border border-b bg-brand-soft/45">
-          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
             <p className="text-accent-orange text-xs font-bold tracking-widest">ABOUT US</p>
             <h1 className="mt-3 max-w-3xl text-4xl font-bold sm:text-5xl">
               We exist to help Ugandans find work.
@@ -68,7 +68,7 @@ function AboutPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14">
           <p className="eyebrow">The LS promise</p><h2 className="mt-2 text-3xl font-bold">What we stand for</h2>
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             {VALUES.map((v) => (

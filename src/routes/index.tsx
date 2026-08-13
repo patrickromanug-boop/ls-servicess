@@ -38,7 +38,7 @@ function Home() {
       <Header />
       <main className="flex-1">
         <section className="border-b border-border/70 bg-brand text-brand-foreground overflow-hidden">
-          <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[1.15fr_1fr]">
+          <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-[1.15fr_1fr]">
             <div>
               <span className="bg-brand-foreground/15 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold">
                 <Sparkles className="size-3.5" />
@@ -108,7 +108,7 @@ function Home() {
         </section>
 
 
-        <section id="jobs" className="mx-auto max-w-5xl scroll-mt-20 px-4 py-16 sm:px-6">
+        <section id="jobs" className="mx-auto max-w-5xl scroll-mt-20 px-4 py-12 sm:px-6 sm:py-14">
           <h2 className="text-2xl font-bold">Open jobs</h2>
           <p className="text-muted-foreground mt-1 text-sm">
             Fresh listings from organizations hiring across Uganda.
@@ -123,7 +123,7 @@ function Home() {
         </section>
 
         <section className="border-border bg-muted/55 border-y">
-          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14">
             <h2 className="text-2xl font-bold">Other services</h2>
             <p className="text-muted-foreground mt-1 text-sm">
               Beyond jobs, we support individuals and small businesses.
@@ -147,7 +147,7 @@ function Home() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14">
           <div className="border-border flex flex-col items-start gap-6 rounded-3xl border bg-card p-8 shadow-sm md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="flex items-center gap-2 text-xl font-bold">

@@ -49,7 +49,7 @@ function HireTalentPage() {
       <Header />
       <main className="flex-1">
         <section className="page-grid border-b border-border/70 bg-brand text-brand-foreground">
-          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
             <h1 className="max-w-2xl text-4xl font-bold sm:text-5xl">
               Hire talent. Advertise a job in minutes.
             </h1>
@@ -69,7 +69,7 @@ function HireTalentPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14">
           <p className="eyebrow">Simple by design</p><h2 className="mt-2 text-3xl font-bold">How it works</h2>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {STEPS.map((step, i) => (

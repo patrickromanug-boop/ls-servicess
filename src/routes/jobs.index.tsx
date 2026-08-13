@@ -33,7 +33,7 @@ function JobsPage() {
   return (
     <div className="site-shell flex flex-col">
       <Header />
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-14 sm:px-6">
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6 sm:py-12">
         <p className="eyebrow">Find your next role</p>
         <h1 className="mt-2 text-3xl font-bold sm:text-4xl">Find work in Uganda</h1>
         <p className="text-muted-foreground mt-2 text-sm">
