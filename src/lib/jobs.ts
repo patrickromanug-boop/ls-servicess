@@ -83,7 +83,7 @@ export async function fetchJobs(): Promise<JobRow[]> {
       .from("jobs")
       .select(columns)
       .eq("status", "active")
-      .gte("deadline", today)          // only show jobs whose deadline hasn't passed
+      .gte("deadline", today)
       .order("created_at", { ascending: false })
       .limit(300);
 
@@ -100,8 +100,8 @@ export async function fetchJobById(id: string): Promise<JobRow | null> {
       .from("jobs")
       .select(columns)
       .eq("id", id)
-      .eq("status", "active")          // hidden if not active
-      .gte("deadline", today)          // hidden if deadline has passed
+      .eq("status", "active")
+      .gte("deadline", today)
       .maybeSingle();
 
   let { data, error } = await query(SELECT_COLUMNS);
@@ -115,6 +115,15 @@ export const jobsQueryOptions = () =>
 
 export const jobQueryOptions = (id: string) =>
   queryOptions({ queryKey: ["job", id], queryFn: () => fetchJobById(id), staleTime: 60_000 });
+
+/** Increment a job's view count only if this viewer hasn't viewed it before. */
+export async function incrementJobView(jobId: string, viewerKey: string) {
+  const { error } = await supabase.rpc("increment_job_view", {
+    _job_id: jobId,
+    _viewer_key: viewerKey,
+  });
+  if (error) console.error("Failed to increment job view", error);
+}
 
 export async function reportJob(input: { job_id: string; reason: string; details: string | null }) {
   const { data: userData } = await supabase.auth.getUser();
