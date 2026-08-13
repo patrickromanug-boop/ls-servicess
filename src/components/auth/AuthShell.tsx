@@ -10,10 +10,11 @@ export function AuthShell({
   children: ReactNode;
 }) {
   return (
-    <main className="mx-auto w-full max-w-md flex-1 px-4 py-14">
-      <h1 className="text-2xl font-bold">{title}</h1>
+    <main className="page-grid mx-auto w-full max-w-md flex-1 px-4 py-14 sm:py-20">
+      <p className="eyebrow">LS Services account</p>
+      <h1 className="mt-2 text-3xl font-bold">{title}</h1>
       <p className="text-muted-foreground mt-1 text-sm">{subtitle}</p>
-      <div className="border-border mt-6 rounded-2xl border bg-card p-6">{children}</div>
+      <div className="border-border mt-7 rounded-3xl border bg-card p-6 shadow-lg shadow-brand/5">{children}</div>
     </main>
   );
 }
@@ -23,7 +24,7 @@ export function GoogleButton({ onClick, label = "Continue with Google" }: { onCl
     <button
       type="button"
       onClick={onClick}
-      className="border-border hover:bg-muted flex w-full items-center justify-center gap-2.5 rounded-lg border py-3 text-sm font-semibold"
+      className="border-border hover:bg-muted flex w-full items-center justify-center gap-2.5 rounded-xl border py-3 text-sm font-semibold transition-colors"
     >
       <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
         <path
