@@ -255,7 +255,7 @@ function JobListingTab({
   );
 }
 
-// ---- Targeted Jobs Panel (alert delivery only) ----
+// ---- Targeted Jobs Panel (revised flow) ----
 function TargetedJobsPanel({
   userId,
   subscription,
@@ -268,8 +268,13 @@ function TargetedJobsPanel({
   onSwitchToProfile: () => void;
 }) {
   const queryClient = useQueryClient();
-  const [pendingDelivery, setPendingDelivery] = useState<"dashboard" | "whatsapp" | "both" | null>(null);
-  const currentDelivery = subscription?.alert_delivery ?? "dashboard";
+  const [displayDelivery, setDisplayDelivery] = useState(subscription?.alert_delivery ?? "dashboard");
+  const [selectedDelivery, setSelectedDelivery] = useState<"dashboard" | "whatsapp" | "both" | null>(null);
+  const [previousDelivery, setPreviousDelivery] = useState<"dashboard" | "whatsapp" | "both" | null>(null);
+
+  useEffect(() => {
+    setDisplayDelivery(subscription?.alert_delivery ?? "dashboard");
+  }, [subscription?.alert_delivery]);
 
   const phone = profile?.phone?.trim();
   const hasPreferences =
@@ -277,38 +282,66 @@ function TargetedJobsPanel({
     (profile?.preferred_locations && profile.preferred_locations.length > 0);
   const profileComplete = !!phone && hasPreferences;
 
-  const handleRadioClick = (value: "dashboard" | "whatsapp" | "both") => {
-    if (!profileComplete) {
-      onSwitchToProfile();
-      return;
-    }
-    setPendingDelivery(value);
-  };
-
-  const handleConfirm = async () => {
-    if (!pendingDelivery) return;
+  const handleRadioClick = async (value: "dashboard" | "whatsapp" | "both") => {
+    if (!profileComplete) return; // shouldn't happen as radios are hidden, but safety
+    const prev = subscription?.alert_delivery ?? "dashboard";
+    setPreviousDelivery(prev);
+    setSelectedDelivery(value);
+    setDisplayDelivery(value);
     try {
-      await updateAlertDelivery(pendingDelivery);
+      await updateAlertDelivery(value);
       queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
-      setPendingDelivery(null);
     } catch (err) {
       console.error(err);
+      // revert optimistic update on error
+      setDisplayDelivery(prev);
+      setSelectedDelivery(null);
+      setPreviousDelivery(null);
     }
   };
 
   const handleCancel = async () => {
-    if (!pendingDelivery) return;
+    if (!selectedDelivery) return;
     const userFullName = profile?.full_name ?? "User";
-    if (pendingDelivery === "whatsapp" || pendingDelivery === "both") {
+    if (selectedDelivery === "whatsapp" || selectedDelivery === "both") {
       const msg = encodeURIComponent(
-        `${userFullName} cancelled a WhatsApp job alert request (pending choice: ${pendingDelivery}).`
+        `${userFullName} cancelled a WhatsApp job alert request (pending choice: ${selectedDelivery}).`
       );
       window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${msg}`, "_blank");
-    } else if (pendingDelivery === "dashboard") {
+    } else if (selectedDelivery === "dashboard") {
       await createDashboardCancelInquiry().catch(console.error);
     }
-    setPendingDelivery(null);
+    // revert to previous delivery
+    if (previousDelivery) {
+      try {
+        await updateAlertDelivery(previousDelivery);
+        setDisplayDelivery(previousDelivery);
+        queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    setSelectedDelivery(null);
+    setPreviousDelivery(null);
   };
+
+  // If profile incomplete, show only a button to profile
+  if (!profileComplete) {
+    return (
+      <div className="border-border rounded-2xl border bg-white p-5">
+        <h3 className="font-display text-sm font-bold">Job alert delivery</h3>
+        <p className="text-muted-foreground mt-1 text-xs">
+          Complete your profile to choose how you want to receive job alerts.
+        </p>
+        <button
+          onClick={onSwitchToProfile}
+          className="mt-4 rounded-lg bg-brand px-4 py-2 text-xs font-bold text-white"
+        >
+          Go to Profile
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="border-border rounded-2xl border bg-white p-5">
@@ -317,24 +350,15 @@ function TargetedJobsPanel({
         Choose how you'd like to receive job matches.
       </p>
 
-      {!profileComplete && (
-        <p className="text-amber-600 text-xs mt-2">
-          Please complete your profile (phone number and at least one job preference) to enable alerts.
-        </p>
-      )}
-
       <div className="mt-3 flex flex-wrap gap-3">
         {(["dashboard", "whatsapp", "both"] as const).map((option) => {
-          const isCurrentReal = currentDelivery === option && pendingDelivery === null;
-          const isPending = pendingDelivery === option;
+          const isCurrent = displayDelivery === option;
           return (
             <label
               key={option}
               className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium cursor-pointer transition-colors ${
-                isPending
+                isCurrent
                   ? "border-brand bg-brand/10 text-brand"
-                  : isCurrentReal
-                  ? "border-brand bg-brand/5 text-brand"
                   : "border-border text-muted-foreground hover:border-gray-400"
               }`}
             >
@@ -342,7 +366,7 @@ function TargetedJobsPanel({
                 type="radio"
                 name="alert_delivery"
                 value={option}
-                checked={isPending || isCurrentReal}
+                checked={isCurrent}
                 onChange={() => handleRadioClick(option)}
                 className="hidden"
               />
@@ -354,10 +378,11 @@ function TargetedJobsPanel({
         })}
       </div>
 
-      {pendingDelivery && profileComplete && (
+      {/* Info panel shown after a selection is made */}
+      {selectedDelivery && (
         <div className="mt-4 rounded-xl border border-brand/20 bg-brand/[0.03] p-4">
           <p className="text-xs font-medium">
-            Confirm your alert delivery preference: <strong className="capitalize">{pendingDelivery}</strong>
+            Your current alert delivery: <strong className="capitalize">{displayDelivery}</strong>
           </p>
           <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
             {profile?.full_name && <p>Name: {profile.full_name}</p>}
@@ -370,12 +395,6 @@ function TargetedJobsPanel({
             )}
           </div>
           <div className="mt-3 flex gap-2">
-            <button
-              onClick={handleConfirm}
-              className="rounded-lg bg-brand px-4 py-2 text-xs font-bold text-white"
-            >
-              Confirm
-            </button>
             <button
               onClick={handleCancel}
               className="rounded-lg border border-gray-300 px-4 py-2 text-xs font-bold text-gray-600"
@@ -390,7 +409,7 @@ function TargetedJobsPanel({
             </button>
           </div>
           <p className="text-[11px] text-gray-400 mt-2">
-            {pendingDelivery !== "dashboard"
+            {selectedDelivery !== "dashboard"
               ? "If you cancel, the admin will be notified via WhatsApp."
               : "If you cancel, the admin will be notified in the portal."}
           </p>
