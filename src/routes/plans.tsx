@@ -9,9 +9,8 @@ import { useAuth } from "@/lib/auth";
 import { PlanSelector } from "@/components/plans/PlanSelector";
 import {
   ensureWebSubscription,
-  initiateWebPayment,
   isTrialActive,
-  selectPlan,
+  requestPlan,
   subscriptionQueryOptions,
   trialDaysLeft,
 } from "@/lib/account";
@@ -47,7 +46,8 @@ function PlansPage() {
   const [busy, setBusy] = useState<Tier | "browse" | null>(null);
 
   useEffect(() => {
-    if (!loading && !user) navigate({ to: "/auth/login", search: { redirect: "/plans" }, replace: true });
+    if (!loading && !user)
+      navigate({ to: "/auth/login", search: { redirect: "/plans" }, replace: true });
   }, [loading, user, navigate]);
 
   const subQuery = useQuery({ ...subscriptionQueryOptions(), enabled: !!user });
@@ -67,15 +67,13 @@ function PlansPage() {
   async function choose(tier: Tier, cycle: BillingCycle) {
     setBusy(tier);
     try {
-      await selectPlan(tier, cycle);
-      await qc.invalidateQueries({ queryKey: ["web_subscription"] });
-      if (trialing) {
-        toast.success("Plan saved — it starts when your trial ends");
-        navigate({ to: "/dashboard" });
-      } else {
-        const result = await initiateWebPayment(tier, cycle);
-        toast.info(result.message);
-      }
+      await requestPlan(tier, cycle);
+      toast.success(
+        "Request submitted — we'll confirm your payment and activate your plan shortly."
+      );
+      // Invalidate pending plan request queries so dashboard shows pending state
+      qc.invalidateQueries({ queryKey: ["plan_requests"] });
+      navigate({ to: "/dashboard" });
     } catch (error) {
       toast.error((error as Error).message);
     } finally {
