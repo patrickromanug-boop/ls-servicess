@@ -107,6 +107,19 @@ export function JobFeed({ prioritizedJobIds = [] }: { prioritizedJobIds?: string
     return filteredJobs;
   }, [jobs, query, category, location, jobType, prioritizedJobIds]);
 
+  // Split filtered jobs into targeted and other when prioritized IDs are provided
+  const targetedFiltered = useMemo(() => {
+    if (prioritizedJobIds.length === 0) return [];
+    const prioritySet = new Set(prioritizedJobIds);
+    return filtered.filter((job) => prioritySet.has(job.id));
+  }, [filtered, prioritizedJobIds]);
+
+  const otherFiltered = useMemo(() => {
+    if (prioritizedJobIds.length === 0) return filtered;
+    const prioritySet = new Set(prioritizedJobIds);
+    return filtered.filter((job) => !prioritySet.has(job.id));
+  }, [filtered, prioritizedJobIds]);
+
   const activeFilters = [category, location, jobType].filter((v) => v !== ALL).length;
 
   // Build the WhatsApp message for the empty state
@@ -213,6 +226,36 @@ export function JobFeed({ prioritizedJobIds = [] }: { prioritizedJobIds?: string
             <MessageCircle className="size-4" />
             Request this job on WhatsApp
           </a>
+        </div>
+      ) : prioritizedJobIds.length > 0 ? (
+        <div className="mt-4 space-y-8">
+          {targetedFiltered.length > 0 && (
+            <section>
+              <h2 className="font-display text-lg font-bold">Targeted Jobs</h2>
+              <p className="text-muted-foreground mt-1 text-xs">
+                Jobs that match your preferred categories and locations.
+              </p>
+              <div className="mt-4 grid gap-3">
+                {targetedFiltered.map((job) => (
+                  <JobCard key={job.id} job={job} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {otherFiltered.length > 0 && (
+            <section>
+              <h2 className="font-display text-lg font-bold">Other Jobs</h2>
+              <p className="text-muted-foreground mt-1 text-xs">
+                All other open positions you might be interested in.
+              </p>
+              <div className="mt-4 grid gap-3">
+                {otherFiltered.map((job) => (
+                  <JobCard key={job.id} job={job} />
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       ) : (
         <div className="mt-4 grid gap-3">
