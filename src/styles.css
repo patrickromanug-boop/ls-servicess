@@ -73,7 +73,7 @@
 }
 
 :root {
-  --radius: 0.75rem;
+  --radius: 0.9rem;
   --brand: oklch(0.446 0.234 267.5);
   --brand-foreground: oklch(1 0 0);
   --brand-soft: oklch(0.955 0.02 267.5);
@@ -158,9 +158,11 @@
   }
 
   body {
-    background-color: var(--color-background);
+    background-color: oklch(0.985 0.004 255);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
   h1,
@@ -169,6 +171,29 @@
   h4 {
     font-family: var(--font-display);
     letter-spacing: -0.02em;
+  }
+}
+
+@layer components {
+  .site-shell {
+    min-height: 100vh;
+    overflow: hidden;
+    background: oklch(0.985 0.004 255);
+  }
+
+  .page-grid {
+    background-image:
+      linear-gradient(oklch(0.92 0.014 255 / 45%) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(0.92 0.014 255 / 45%) 1px, transparent 1px);
+    background-size: 42px 42px;
+  }
+
+  .eyebrow {
+    color: var(--brand);
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
   }
 }
 
