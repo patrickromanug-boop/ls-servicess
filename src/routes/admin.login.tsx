@@ -60,13 +60,9 @@ function AdminLoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#0E1738] px-4 py-12">
       <div className="w-full max-w-sm">
-        <div className="flex items-center gap-2">
-          <span className="font-display text-3xl leading-none font-bold">
-            <span className="text-white">L</span>
-            <span className="text-accent-orange">S</span>
-          </span>
-          <span className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold text-white">
-            Services
+        <div className="flex items-center gap-3">
+          <span className="inline-flex rounded-lg bg-white px-2.5 py-2">
+            <img src={logoAsset.url} alt="LS Services" className="h-7 w-auto" />
           </span>
           <span className="text-accent-orange text-[11px] font-bold tracking-[0.18em] uppercase">
             Admin
