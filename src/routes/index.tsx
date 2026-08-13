@@ -37,7 +37,7 @@ function Home() {
     <div className="site-shell flex flex-col">
       <Header />
       <main className="flex-1">
-        <section className="page-grid border-b border-border/70 bg-brand text-brand-foreground overflow-hidden">
+        <section className="border-b border-border/70 bg-brand text-brand-foreground overflow-hidden">
           <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[1.15fr_1fr]">
             <div>
               <span className="bg-brand-foreground/15 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold">
