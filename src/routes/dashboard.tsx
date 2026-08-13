@@ -89,6 +89,13 @@ function DashboardPage() {
     enabled: !!user,
   });
 
+  // Redirect to plans if user exists but has no subscription row yet
+  useEffect(() => {
+    if (user && subQuery.data === null && !subQuery.isLoading) {
+      navigate({ to: "/plans", replace: true });
+    }
+  }, [user, subQuery.data, subQuery.isLoading, navigate]);
+
   if (!user) {
     return (
       <div className="flex min-h-screen flex-col">
