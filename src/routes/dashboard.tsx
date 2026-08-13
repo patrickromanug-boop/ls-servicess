@@ -18,6 +18,7 @@ import { DocumentsSection } from "@/components/dashboard/DocumentsSection";
 import { OtherServicesCards } from "@/components/site/OtherServicesCards";
 import { JobFeed } from "@/components/jobs/JobFeed";
 import { createDashboardCancelInquiry } from "@/lib/alert-inquiries";
+import { Sparkles, Check } from "lucide-react";
 
 const ADMIN_WHATSAPP = "+256772702263";
 
@@ -136,10 +137,7 @@ function DashboardPage() {
 
         <div className="mt-6">
           {tab === "job-listing" && (
-            <JobListingTab
-              userId={user.id}
-              hasActivePlan={!!hasActivePlan}
-            />
+            <JobListingTab userId={user.id} hasActivePlan={!!hasActivePlan} />
           )}
           {tab === "bill-plans" && (
             <>
@@ -173,7 +171,7 @@ function DashboardPage() {
   );
 }
 
-// ---- Job Listing tab: upsell (free users) + JobFeed ----
+// ---- Job Listing tab: attractive upsell (free users) + JobFeed ----
 function JobListingTab({
   userId,
   hasActivePlan,
@@ -207,18 +205,43 @@ function JobListingTab({
 
   return (
     <div>
-      {/* Upsell for free users: shown before search/filter and disappears after choosing a plan */}
       {!hasActivePlan && (
-        <div className="border-border rounded-2xl border bg-white p-5 mb-6">
-          <h3 className="font-display text-sm font-bold">Get jobs matched for you</h3>
-          <p className="text-muted-foreground mt-1 text-xs">
-            Upgrade to a plan and tell us your preferences. We’ll highlight jobs that match
-            your skills and location — right at the top of this list.
-          </p>
+        <div className="border-brand/20 bg-brand/5 mb-6 rounded-2xl border p-5">
+          <div className="flex items-start gap-3">
+            <div className="bg-brand/10 rounded-xl p-2.5">
+              <Sparkles className="text-brand size-5" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-display text-sm font-bold">
+                Get jobs matched for you
+              </h3>
+              <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+                Tell us what you’re looking for and where. We’ll put the best
+                matches at the top of this list, and can even send them to you
+                on WhatsApp.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 space-y-2">
+            {[
+              "Choose a plan",
+              "Set your job preferences",
+              "See matched jobs first — or get WhatsApp alerts",
+            ].map((step, idx) => (
+              <div key={idx} className="flex items-center gap-2 text-xs">
+                <span className="bg-brand/10 text-brand flex size-4 items-center justify-center rounded-full">
+                  <Check className="size-2.5" />
+                </span>
+                <span className="text-foreground/80">{step}</span>
+              </div>
+            ))}
+          </div>
+
           <Link
             to="/plans"
             search={{ feature: "targeted-jobs" }}
-            className="mt-3 inline-block rounded-lg bg-brand px-4 py-2 text-xs font-bold text-white"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-xs font-bold text-white"
           >
             Try it out
           </Link>
