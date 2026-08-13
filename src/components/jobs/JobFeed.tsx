@@ -1,30 +1,82 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { ChevronDown, Search, SearchX } from "lucide-react";
 import { useMemo, useState } from "react";
 import { JobCard } from "./JobCard";
 import { jobsQueryOptions, type JobRow } from "@/lib/jobs";
+import { supabase } from "@/lib/supabase";
 
 const ALL = "all";
 
-function unique(values: (string | undefined | null)[]) {
-  return Array.from(new Set(values.filter((v): v is string => !!v))).sort();
+// Fetch all available categories
+async function fetchAllCategories() {
+  const { data, error } = await supabase
+    .from("categories")
+    .select("id, name")
+    .order("name");
+  if (error) throw error;
+  return data ?? [];
+}
+
+// Fetch all available locations
+async function fetchAllLocations() {
+  const { data, error } = await supabase
+    .from("locations")
+    .select("id, name")
+    .order("name");
+  if (error) throw error;
+  return data ?? [];
+}
+
+// Fetch all available job types
+async function fetchAllJobTypes() {
+  const { data, error } = await supabase
+    .from("job_types")
+    .select("id, name")
+    .order("name");
+  if (error) throw error;
+  return data ?? [];
 }
 
 export function JobFeed() {
   const { data: jobs } = useSuspenseQuery(jobsQueryOptions());
+
+  // Fetch full lists of filter options from the database
+  const { data: categoriesData = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: fetchAllCategories,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const { data: locationsData = [] } = useQuery({
+    queryKey: ["locations"],
+    queryFn: fetchAllLocations,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: jobTypesData = [] } = useQuery({
+    queryKey: ["job_types"],
+    queryFn: fetchAllJobTypes,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const [query, setQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [category, setCategory] = useState(ALL);
   const [location, setLocation] = useState(ALL);
   const [jobType, setJobType] = useState(ALL);
 
-  const options = useMemo(
-    () => ({
-      categories: unique(jobs.map((j) => j.categories?.name)),
-      locations: unique(jobs.map((j) => j.locations?.name)),
-      jobTypes: unique(jobs.map((j) => j.job_types?.name)),
-    }),
-    [jobs],
+  // Extract names from the fetched data
+  const categoryOptions = useMemo(
+    () => categoriesData.map((c: any) => c.name),
+    [categoriesData]
+  );
+  const locationOptions = useMemo(
+    () => locationsData.map((l: any) => l.name),
+    [locationsData]
+  );
+  const jobTypeOptions = useMemo(
+    () => jobTypesData.map((t: any) => t.name),
+    [jobTypesData]
   );
 
   const filtered = useMemo(() => {
@@ -70,7 +122,9 @@ export function JobFeed() {
               {activeFilters}
             </span>
           )}
-          <ChevronDown className={`size-4 transition-transform ${showFilters ? "rotate-180" : ""}`} />
+          <ChevronDown
+            className={`size-4 transition-transform ${showFilters ? "rotate-180" : ""}`}
+          />
         </button>
       </div>
 
@@ -80,19 +134,19 @@ export function JobFeed() {
             label="Category"
             value={category}
             onChange={setCategory}
-            options={options.categories}
+            options={categoryOptions}
           />
           <FilterSelect
             label="Location"
             value={location}
             onChange={setLocation}
-            options={options.locations}
+            options={locationOptions}
           />
           <FilterSelect
             label="Job type"
             value={jobType}
             onChange={setJobType}
-            options={options.jobTypes}
+            options={jobTypeOptions}
           />
           {activeFilters > 0 && (
             <button
