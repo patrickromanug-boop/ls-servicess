@@ -7,6 +7,7 @@ import { Footer } from "@/components/site/Footer";
 import { supabase } from "@/lib/supabase";
 import { signInWithGoogle } from "@/lib/auth";
 import { GoogleButton, AuthShell } from "@/components/auth/AuthShell";
+import { fetchWebSubscription } from "@/lib/account";
 
 const schema = z.object({
   email: z.string().trim().email({ message: "Enter a valid email address" }).max(255),
@@ -48,12 +49,28 @@ function LoginPage() {
     }
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword(parsed.data);
-    setBusy(false);
     if (error) {
+      setBusy(false);
       toast.error(error.message);
       return;
     }
-    navigate({ to: safeRedirect, replace: true });
+
+    // Determine if this is a first-time login (no subscription row)
+    try {
+      const sub = await fetchWebSubscription();
+      setBusy(false);
+      if (!sub) {
+        // New user: go to plan selection
+        navigate({ to: "/plans", replace: true });
+      } else {
+        // Returning user: go to dashboard
+        navigate({ to: "/dashboard", replace: true });
+      }
+    } catch {
+      // Fallback to dashboard if fetch fails; dashboard will also redirect to plans if needed
+      setBusy(false);
+      navigate({ to: "/dashboard", replace: true });
+    }
   }
 
   return (
@@ -84,7 +101,7 @@ function LoginPage() {
           <span className="bg-border h-px flex-1" />
         </div>
 
-        <GoogleButton onClick={() => signInWithGoogle(safeRedirect)} />
+        <GoogleButton onClick={() => signInWithGoogle("/dashboard")} />
 
         <div className="mt-5 space-y-2 text-center text-sm">
           <Link to="/auth/forgot-password" className="text-brand block font-semibold">
