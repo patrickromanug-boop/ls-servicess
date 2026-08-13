@@ -49,11 +49,11 @@ const VALUES = [
 
 function AboutPage() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="site-shell flex flex-col">
       <Header />
       <main className="flex-1">
-        <section className="border-border border-b">
-          <div className="mx-auto max-w-6xl px-4 py-16">
+        <section className="page-grid border-border border-b bg-brand-soft/45">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24">
             <p className="text-accent-orange text-xs font-bold tracking-widest">ABOUT US</p>
             <h1 className="mt-3 max-w-3xl text-4xl font-bold sm:text-5xl">
               We exist to help Ugandans find work.
@@ -68,12 +68,12 @@ function AboutPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-4 py-16">
-          <h2 className="text-2xl font-bold">What we stand for</h2>
+        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+          <p className="eyebrow">The LS promise</p><h2 className="mt-2 text-3xl font-bold">What we stand for</h2>
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             {VALUES.map((v) => (
-              <div key={v.title} className="border-border rounded-2xl border p-6">
-                <span className="bg-brand-soft text-brand grid size-10 place-items-center rounded-lg">
+              <div key={v.title} className="border-border rounded-3xl border bg-card p-6 shadow-sm transition-transform duration-200 hover:-translate-y-1 hover:shadow-md">
+                <span className="bg-brand-soft text-brand grid size-11 place-items-center rounded-2xl">
                   {v.icon}
                 </span>
                 <h3 className="mt-4 text-lg font-bold">{v.title}</h3>
