@@ -40,16 +40,12 @@ export function AdminSidebar() {
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col bg-[#14204F] px-4 py-6 text-white/80 lg:flex">
-      <div className="flex items-center gap-2 px-2">
-        <span className="font-display text-2xl leading-none font-bold tracking-tight">
-          <span className="text-white">L</span>
-          <span className="text-accent-orange">S</span>
-        </span>
-        <span className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-white">
-          Services
+      <div className="flex flex-col gap-2 px-2">
+        <span className="inline-flex w-fit rounded-lg bg-white px-2.5 py-2">
+          <img src={logoAsset.url} alt="LS Services" className="h-7 w-auto" />
         </span>
         <span className="text-accent-orange text-[11px] font-bold tracking-[0.18em] uppercase">
-          Admin
+          Admin portal
         </span>
       </div>
 
