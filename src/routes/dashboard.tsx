@@ -126,7 +126,8 @@ function DashboardPage() {
           Manage your plan, preferences and documents in one place.
         </p>
 
-        <div className="border-border mt-6 flex gap-1 overflow-x-auto border-b">
+        {/* Changed: flex-wrap and pb-2 instead of overflow-x-auto */}
+        <div className="border-border mt-6 flex flex-wrap gap-1 border-b pb-2">
           {tabs.map((item) => (
             <button
               key={item.id}
@@ -291,14 +292,12 @@ function TargetedJobsPanel({
   const handleRadioClick = async (value: "dashboard" | "whatsapp" | "both") => {
     if (!profileComplete) return;
     const from = currentDelivery;
-    // Optimistically update UI via pendingChange
     setPendingChange({ from, to: value });
     try {
       await updateAlertDelivery(value);
       queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
     } catch (err) {
       console.error(err);
-      // Revert on error
       setPendingChange(null);
     }
   };
@@ -308,7 +307,6 @@ function TargetedJobsPanel({
     const userFullName = profile?.full_name ?? "User";
     const { from, to } = pendingChange;
 
-    // Send appropriate admin notification
     if (to === "whatsapp" || to === "both") {
       const msg = encodeURIComponent(
         `${userFullName} attempted to change job alert delivery from ${from} to ${to}, but cancelled. Current preference remains ${from}.`
@@ -318,7 +316,6 @@ function TargetedJobsPanel({
       await createDashboardCancelInquiry().catch(console.error);
     }
 
-    // Revert to previous delivery
     try {
       await updateAlertDelivery(from);
       queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
@@ -326,11 +323,9 @@ function TargetedJobsPanel({
       console.error(err);
     }
 
-    // Clear pending change so UI returns to non-pending state
     setPendingChange(null);
   };
 
-  // If profile incomplete, show only a button to profile
   if (!profileComplete) {
     return (
       <div className="border-border rounded-2xl border bg-white p-5">
@@ -385,7 +380,6 @@ function TargetedJobsPanel({
         })}
       </div>
 
-      {/* Info panel shown only when there is a pending change */}
       {pendingChange && (
         <div className="mt-4 rounded-xl border border-brand/20 bg-brand/[0.03] p-4">
           <p className="text-xs font-medium">
