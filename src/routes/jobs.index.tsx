@@ -31,14 +31,15 @@ export const Route = createFileRoute("/jobs/")({
 
 function JobsPage() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="site-shell flex flex-col">
       <Header />
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
-        <h1 className="text-3xl font-bold">Find work in Uganda</h1>
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-14 sm:px-6">
+        <p className="eyebrow">Find your next role</p>
+        <h1 className="mt-2 text-3xl font-bold sm:text-4xl">Find work in Uganda</h1>
         <p className="text-muted-foreground mt-2 text-sm">
           Browse every open listing. No account needed to look around.
         </p>
-        <div className="mt-6">
+        <div className="mt-8">
           <Suspense fallback={<p className="text-muted-foreground text-sm">Loading jobs…</p>}>
             <JobFeed />
           </Suspense>

@@ -45,11 +45,11 @@ const STEPS = [
 
 function HireTalentPage() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="site-shell flex flex-col">
       <Header />
       <main className="flex-1">
-        <section className="bg-brand text-brand-foreground">
-          <div className="mx-auto max-w-6xl px-4 py-16">
+        <section className="page-grid border-b border-border/70 bg-brand text-brand-foreground">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-24">
             <h1 className="max-w-2xl text-4xl font-bold sm:text-5xl">
               Hire talent. Advertise a job in minutes.
             </h1>
@@ -61,7 +61,7 @@ function HireTalentPage() {
               href={WHATSAPP_HIRE_TALENT}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-accent-orange text-accent-orange-foreground mt-8 inline-flex items-center gap-2 rounded-lg px-6 py-3.5 text-sm font-bold"
+              className="bg-accent-orange text-accent-orange-foreground hover:bg-accent-orange/90 mt-8 inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold transition-colors"
             >
               <MessageSquare className="size-4" />
               Advertise a job on WhatsApp
@@ -69,12 +69,12 @@ function HireTalentPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-4 py-16">
-          <h2 className="text-2xl font-bold">How it works</h2>
+        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+          <p className="eyebrow">Simple by design</p><h2 className="mt-2 text-3xl font-bold">How it works</h2>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {STEPS.map((step, i) => (
-              <div key={step.title} className="border-border rounded-2xl border p-6">
-                <span className="bg-brand-soft text-brand grid size-10 place-items-center rounded-lg">
+              <div key={step.title} className="border-border rounded-3xl border bg-card p-6 shadow-sm">
+                <span className="bg-brand-soft text-brand grid size-11 place-items-center rounded-2xl">
                   {step.icon}
                 </span>
                 <p className="text-muted-foreground mt-4 text-xs font-bold">STEP {i + 1}</p>
@@ -84,7 +84,7 @@ function HireTalentPage() {
             ))}
           </div>
 
-          <div className="border-border bg-muted/40 mt-10 flex items-start gap-3 rounded-2xl border p-6">
+          <div className="border-border bg-accent-orange-soft/50 mt-10 flex items-start gap-3 rounded-3xl border p-6">
             <Clock className="text-accent-orange mt-0.5 size-5 shrink-0" />
             <p className="text-sm">
               <strong>Turnaround:</strong> most listings are reviewed and published the same working

@@ -34,17 +34,17 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="site-shell flex flex-col">
       <Header />
       <main className="flex-1">
-        <section className="bg-brand text-brand-foreground overflow-hidden">
-          <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 sm:py-24 lg:grid-cols-[1.15fr_1fr]">
+        <section className="page-grid border-b border-border/70 bg-brand text-brand-foreground overflow-hidden">
+          <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[1.15fr_1fr]">
             <div>
               <span className="bg-brand-foreground/15 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold">
                 <Sparkles className="size-3.5" />
                 Uganda&apos;s job portal
               </span>
-              <h1 className="mt-5 text-4xl leading-[1.05] font-bold sm:text-6xl">
+              <h1 className="mt-5 text-4xl leading-[1.02] font-bold sm:text-6xl lg:text-7xl">
                 Helping Ugandans find work — one honest listing at a time.
               </h1>
               <p className="text-brand-foreground/80 mt-5 max-w-xl text-base sm:text-lg">
@@ -54,21 +54,21 @@ function Home() {
               <div className="mt-8 flex flex-wrap gap-3">
                 <a
                   href="#jobs"
-                  className="bg-accent-orange text-accent-orange-foreground inline-flex items-center gap-2 rounded-lg px-6 py-3.5 text-sm font-bold"
+                  className="bg-accent-orange text-accent-orange-foreground hover:bg-accent-orange/90 inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold transition-colors"
                 >
                   Find work
                   <ArrowRight className="size-4" />
                 </a>
                 <Link
                   to="/hire-talent"
-                  className="border-brand-foreground/30 hover:bg-brand-foreground/10 inline-flex items-center gap-2 rounded-lg border px-6 py-3.5 text-sm font-bold"
+                  className="border-brand-foreground/30 hover:bg-brand-foreground/10 inline-flex items-center gap-2 rounded-full border px-6 py-3.5 text-sm font-bold transition-colors"
                 >
                   Hire talent
                 </Link>
               </div>
             </div>
 
-            <div className="border-brand-foreground/15 bg-brand-foreground/8 hidden rounded-2xl border p-7 lg:block">
+            <div className="border-brand-foreground/15 bg-brand-foreground/8 hidden rounded-3xl border p-7 shadow-2xl lg:block">
               <p className="text-brand-foreground/60 text-xs font-bold tracking-widest">
                 WHY LS SERVICES
               </p>
@@ -108,7 +108,7 @@ function Home() {
         </section>
 
 
-        <section id="jobs" className="mx-auto max-w-3xl scroll-mt-20 px-4 py-14">
+        <section id="jobs" className="mx-auto max-w-5xl scroll-mt-20 px-4 py-16 sm:px-6">
           <h2 className="text-2xl font-bold">Open jobs</h2>
           <p className="text-muted-foreground mt-1 text-sm">
             Fresh listings from organizations hiring across Uganda.
@@ -122,8 +122,8 @@ function Home() {
           </div>
         </section>
 
-        <section className="border-border bg-muted/40 border-y">
-          <div className="mx-auto max-w-6xl px-4 py-16">
+        <section className="border-border bg-muted/55 border-y">
+          <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
             <h2 className="text-2xl font-bold">Other services</h2>
             <p className="text-muted-foreground mt-1 text-sm">
               Beyond jobs, we support individuals and small businesses.
@@ -147,8 +147,8 @@ function Home() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-4 py-16">
-          <div className="border-border flex flex-col items-start gap-6 rounded-2xl border p-8 md:flex-row md:items-center md:justify-between">
+        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+          <div className="border-border flex flex-col items-start gap-6 rounded-3xl border bg-card p-8 shadow-sm md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="flex items-center gap-2 text-xl font-bold">
                 <Briefcase className="text-accent-orange size-5" />
@@ -163,7 +163,7 @@ function Home() {
               href={WHATSAPP_HIRE_TALENT}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-brand text-brand-foreground inline-flex shrink-0 items-center gap-2 rounded-lg px-6 py-3.5 text-sm font-bold"
+              className="bg-brand text-brand-foreground hover:bg-brand/90 inline-flex shrink-0 items-center gap-2 rounded-full px-6 py-3.5 text-sm font-bold transition-colors"
             >
               <MessageSquare className="size-4" />
               Advertise a job
@@ -190,8 +190,8 @@ function ServiceCard({
   cta: string;
 }) {
   return (
-    <div className="border-border flex flex-col rounded-2xl border bg-card p-6">
-      <span className="bg-brand-soft text-brand grid size-10 place-items-center rounded-lg">
+    <div className="border-border flex flex-col rounded-3xl border bg-card p-6 shadow-sm transition-transform duration-200 hover:-translate-y-1 hover:shadow-md">
+      <span className="bg-brand-soft text-brand grid size-11 place-items-center rounded-2xl">
         {icon}
       </span>
       <h3 className="mt-4 text-lg font-bold">{title}</h3>
