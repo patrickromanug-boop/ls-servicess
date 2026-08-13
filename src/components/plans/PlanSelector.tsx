@@ -43,6 +43,37 @@ export function PlanSelector({
       </div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {/* Free plan first */}
+        <div className="border-border flex flex-col rounded-2xl border bg-card p-6 sm:col-span-2 xl:col-span-1">
+          <div className="flex items-center justify-between">
+            <h3 className="font-display text-lg font-bold">Just browse for now</h3>
+          </div>
+          <p className="text-muted-foreground mt-1 text-xs">
+            No plan, no payment. Search and apply on your own.
+          </p>
+
+          <p className="mt-5">
+            <span className="font-display text-2xl font-bold">Free</span>
+            <span className="text-muted-foreground text-sm"> /always</span>
+          </p>
+
+          <ul className="mt-5 flex-1 space-y-2.5 text-sm">
+            <Feature>Browse and search every job</Feature>
+            <Feature>Apply through official channels</Feature>
+            <Feature>No WhatsApp job delivery</Feature>
+          </ul>
+
+          <button
+            onClick={onJustBrowse}
+            disabled={busyTier === "browse"}
+            className="border-brand text-brand mt-6 inline-flex items-center justify-center gap-2 rounded-lg border-2 py-3 text-sm font-bold disabled:opacity-60"
+          >
+            <Compass className="size-4" />
+            {browseLabel}
+          </button>
+        </div>
+
+        {/* Paid plans */}
         {PLANS.map((plan) => {
           const selected = currentTier === plan.tier;
           return (
@@ -94,36 +125,6 @@ export function PlanSelector({
             </div>
           );
         })}
-
-        {/* Deliberately the same card size and weight as the paid tiers. */}
-        <div className="border-border flex flex-col rounded-2xl border bg-card p-6 sm:col-span-2 xl:col-span-1">
-          <div className="flex items-center justify-between">
-            <h3 className="font-display text-lg font-bold">Just browse for now</h3>
-          </div>
-          <p className="text-muted-foreground mt-1 text-xs">
-            No plan, no payment. Search and apply on your own.
-          </p>
-
-          <p className="mt-5">
-            <span className="font-display text-2xl font-bold">Free</span>
-            <span className="text-muted-foreground text-sm"> /always</span>
-          </p>
-
-          <ul className="mt-5 flex-1 space-y-2.5 text-sm">
-            <Feature>Browse and search every job</Feature>
-            <Feature>Apply through official channels</Feature>
-            <Feature>No WhatsApp job delivery</Feature>
-          </ul>
-
-          <button
-            onClick={onJustBrowse}
-            disabled={busyTier === "browse"}
-            className="border-brand text-brand mt-6 inline-flex items-center justify-center gap-2 rounded-lg border-2 py-3 text-sm font-bold disabled:opacity-60"
-          >
-            <Compass className="size-4" />
-            {browseLabel}
-          </button>
-        </div>
       </div>
     </div>
   );
