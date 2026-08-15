@@ -321,14 +321,18 @@ function TargetedJobsPanel({
     setDisplayDelivery(value);
 
     updateAlertDelivery(value)
-      .then(() => {
-        queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
+      .then(async () => {
+        await queryClient.invalidateQueries({
+          queryKey: subscriptionQueryOptions().queryKey,
+        });
+        queryClient.invalidateQueries({ queryKey: ["targeted-jobs", userId] });
       })
       .catch((err) => {
         console.error(err);
         setDisplayDelivery(from);
         setPendingChange(null);
       });
+
   };
 
   const handleCancel = async () => {
