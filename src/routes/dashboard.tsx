@@ -293,13 +293,14 @@ function TargetedJobsPanel({
   } | null>(null);
 
   const [displayDelivery, setDisplayDelivery] = useState<"dashboard" | "whatsapp" | "both">(
-    subscription?.alert_delivery ?? "dashboard"
+    subscription?.alert_delivery ?? "whatsapp"
   );
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
 
   useEffect(() => {
-    setDisplayDelivery(subscription?.alert_delivery ?? "dashboard");
+    setDisplayDelivery(subscription?.alert_delivery ?? "whatsapp");
   }, [subscription?.alert_delivery]);
+
 
   const phone = profile?.phone?.trim();
   const hasPreferences =
