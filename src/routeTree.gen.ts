@@ -27,6 +27,7 @@ import { Route as AdminJobAlertInquiriesRouteImport } from './routes/admin.job-a
 import { Route as AdminJobAlertSubscribersRouteImport } from './routes/admin.job-alert-subscribers'
 import { Route as AdminJobsRouteImport } from './routes/admin.jobs'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
+import { Route as AdminPlanRequestsRouteImport } from './routes/admin.plan-requests'
 import { Route as AdminPostJobRouteImport } from './routes/admin.post-job'
 import { Route as AdminReportedJobsRouteImport } from './routes/admin.reported-jobs'
 import { Route as AdminSubscribersRouteImport } from './routes/admin.subscribers'
@@ -129,6 +130,11 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/admin/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminPlanRequestsRoute = AdminPlanRequestsRouteImport.update({
+  id: '/admin/plan-requests',
+  path: '/admin/plan-requests',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminPostJobRoute = AdminPostJobRouteImport.update({
   id: '/admin/post-job',
   path: '/admin/post-job',
@@ -198,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/admin/job-alert-subscribers': typeof AdminJobAlertSubscribersRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/plan-requests': typeof AdminPlanRequestsRoute
   '/admin/post-job': typeof AdminPostJobRoute
   '/admin/reported-jobs': typeof AdminReportedJobsRoute
   '/admin/subscribers': typeof AdminSubscribersRoute
@@ -228,6 +235,7 @@ export interface FileRoutesByTo {
   '/admin/job-alert-subscribers': typeof AdminJobAlertSubscribersRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/plan-requests': typeof AdminPlanRequestsRoute
   '/admin/post-job': typeof AdminPostJobRoute
   '/admin/reported-jobs': typeof AdminReportedJobsRoute
   '/admin/subscribers': typeof AdminSubscribersRoute
@@ -259,6 +267,7 @@ export interface FileRoutesById {
   '/admin/job-alert-subscribers': typeof AdminJobAlertSubscribersRoute
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/plan-requests': typeof AdminPlanRequestsRoute
   '/admin/post-job': typeof AdminPostJobRoute
   '/admin/reported-jobs': typeof AdminReportedJobsRoute
   '/admin/subscribers': typeof AdminSubscribersRoute
@@ -291,6 +300,7 @@ export interface FileRouteTypes {
     | '/admin/job-alert-subscribers'
     | '/admin/jobs'
     | '/admin/login'
+    | '/admin/plan-requests'
     | '/admin/post-job'
     | '/admin/reported-jobs'
     | '/admin/subscribers'
@@ -321,6 +331,7 @@ export interface FileRouteTypes {
     | '/admin/job-alert-subscribers'
     | '/admin/jobs'
     | '/admin/login'
+    | '/admin/plan-requests'
     | '/admin/post-job'
     | '/admin/reported-jobs'
     | '/admin/subscribers'
@@ -351,6 +362,7 @@ export interface FileRouteTypes {
     | '/admin/job-alert-subscribers'
     | '/admin/jobs'
     | '/admin/login'
+    | '/admin/plan-requests'
     | '/admin/post-job'
     | '/admin/reported-jobs'
     | '/admin/subscribers'
@@ -382,6 +394,7 @@ export interface RootRouteChildren {
   AdminJobAlertSubscribersRoute: typeof AdminJobAlertSubscribersRoute
   AdminJobsRoute: typeof AdminJobsRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminPlanRequestsRoute: typeof AdminPlanRequestsRoute
   AdminPostJobRoute: typeof AdminPostJobRoute
   AdminReportedJobsRoute: typeof AdminReportedJobsRoute
   AdminSubscribersRoute: typeof AdminSubscribersRoute
@@ -523,6 +536,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/plan-requests': {
+      id: '/admin/plan-requests'
+      path: '/admin/plan-requests'
+      fullPath: '/admin/plan-requests'
+      preLoaderRoute: typeof AdminPlanRequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/post-job': {
       id: '/admin/post-job'
       path: '/admin/post-job'
@@ -614,6 +634,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminJobAlertSubscribersRoute: AdminJobAlertSubscribersRoute,
   AdminJobsRoute: AdminJobsRoute,
   AdminLoginRoute: AdminLoginRoute,
+  AdminPlanRequestsRoute: AdminPlanRequestsRoute,
   AdminPostJobRoute: AdminPostJobRoute,
   AdminReportedJobsRoute: AdminReportedJobsRoute,
   AdminSubscribersRoute: AdminSubscribersRoute,

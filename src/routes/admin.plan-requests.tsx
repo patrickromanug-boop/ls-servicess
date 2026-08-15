@@ -31,7 +31,10 @@ async function fetchPendingPlanRequests(): Promise<PendingPlanRequest[]> {
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return (data ?? []) as PendingPlanRequest[];
+  return ((data ?? []) as unknown[]).map((row: any) => ({
+    ...row,
+    profiles: Array.isArray(row.profiles) ? (row.profiles[0] ?? null) : (row.profiles ?? null),
+  })) as PendingPlanRequest[];
 }
 
 export const Route = createFileRoute("/admin/plan-requests")({

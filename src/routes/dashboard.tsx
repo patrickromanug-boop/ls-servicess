@@ -199,17 +199,19 @@ function JobListingTab({
   const preferredLocations = profileQuery.data?.preferred_locations ?? [];
 
   const subscription = subQuery.data;
-  const alertDelivery = subscription?.alert_delivery ?? "dashboard";
+  // Targeted list is opt-in: only "dashboard" or "both" show it. Anything else
+  // (including a missing/unknown preference) keeps the feed unprioritized.
+  const alertDelivery = subscription?.alert_delivery ?? "whatsapp";
 
   // Show targeted jobs only when alert delivery is dashboard or both
-  const showTargeted = alertDelivery === "dashboard" || alertDelivery === "both";
+  const showTargeted =
+    !!hasActivePlan && (alertDelivery === "dashboard" || alertDelivery === "both");
 
   const targetedJobsQuery = useQuery({
     queryKey: ["targeted-jobs", userId],
     queryFn: () => fetchTargetedJobs(preferredCategories, preferredLocations),
     enabled:
       !!userId &&
-      hasActivePlan &&
       showTargeted &&
       (preferredCategories.length > 0 || preferredLocations.length > 0),
     staleTime: 30_000,
@@ -218,6 +220,7 @@ function JobListingTab({
   const targetedIds = showTargeted
     ? (targetedJobsQuery.data?.map((job) => job.id) ?? [])
     : [];
+
 
   return (
     <div>
@@ -290,13 +293,14 @@ function TargetedJobsPanel({
   } | null>(null);
 
   const [displayDelivery, setDisplayDelivery] = useState<"dashboard" | "whatsapp" | "both">(
-    subscription?.alert_delivery ?? "dashboard"
+    subscription?.alert_delivery ?? "whatsapp"
   );
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
 
   useEffect(() => {
-    setDisplayDelivery(subscription?.alert_delivery ?? "dashboard");
+    setDisplayDelivery(subscription?.alert_delivery ?? "whatsapp");
   }, [subscription?.alert_delivery]);
+
 
   const phone = profile?.phone?.trim();
   const hasPreferences =
@@ -317,14 +321,18 @@ function TargetedJobsPanel({
     setDisplayDelivery(value);
 
     updateAlertDelivery(value)
-      .then(() => {
-        queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
+      .then(async () => {
+        await queryClient.invalidateQueries({
+          queryKey: subscriptionQueryOptions().queryKey,
+        });
+        queryClient.invalidateQueries({ queryKey: ["targeted-jobs", userId] });
       })
       .catch((err) => {
         console.error(err);
         setDisplayDelivery(from);
         setPendingChange(null);
       });
+
   };
 
   const handleCancel = async () => {
@@ -332,13 +340,18 @@ function TargetedJobsPanel({
     const userFullName = profile?.full_name ?? "User";
     const { from, to } = pendingChange;
 
-    setDisplayDelivery(from);
+    // Cancelling must never leave the cancelled option in place. If the previous
+    // value was the same one being cancelled (e.g. stored default "dashboard"),
+    // fall back to WhatsApp reach-out so the targeted list stays hidden.
+    const revertTo = from === to ? (to === "dashboard" ? "whatsapp" : "dashboard") : from;
+
+    setDisplayDelivery(revertTo);
     setPendingChange(null);
     setShowProfilePrompt(true);
 
     if (to === "whatsapp" || to === "both") {
       const msg = encodeURIComponent(
-        `${userFullName} attempted to change job alert delivery from ${from} to ${to}, but cancelled. Current preference remains ${from}.`
+        `${userFullName} attempted to change job alert delivery from ${from} to ${to}, but cancelled. Current preference remains ${revertTo}.`
       );
       window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${msg}`, "_blank");
     } else if (to === "dashboard") {
@@ -346,12 +359,17 @@ function TargetedJobsPanel({
     }
 
     try {
-      await updateAlertDelivery(from);
-      queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
+      await updateAlertDelivery(revertTo);
+      // Await the refetch so the Job Listing tab never reads a stale preference.
+      await queryClient.invalidateQueries({
+        queryKey: subscriptionQueryOptions().queryKey,
+      });
+      queryClient.removeQueries({ queryKey: ["targeted-jobs", userId] });
     } catch (err) {
       console.error(err);
     }
   };
+
 
   const profilePrompt = (
     <div className="mt-4 rounded-xl border border-brand/20 bg-brand/[0.03] p-4">
