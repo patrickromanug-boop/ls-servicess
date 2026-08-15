@@ -90,6 +90,7 @@ function DashboardPage() {
     enabled: !!user,
   });
 
+  // Redirect to plans if user exists but has no subscription row yet
   useEffect(() => {
     if (user && subQuery.data === null && !subQuery.isLoading) {
       navigate({ to: "/plans", replace: true });
@@ -178,7 +179,7 @@ function DashboardPage() {
   );
 }
 
-// ---- Job Listing tab ----
+// ---- Job Listing tab: attractive upsell (free users) + JobFeed ----
 function JobListingTab({
   userId,
   hasActivePlan,
@@ -270,7 +271,7 @@ function JobListingTab({
   );
 }
 
-// ---- Targeted Jobs Panel ----
+// ---- Targeted Jobs Panel (only Dashboard and WhatsApp options) ----
 function TargetedJobsPanel({
   userId,
   subscription,
@@ -284,8 +285,8 @@ function TargetedJobsPanel({
 }) {
   const queryClient = useQueryClient();
   const [pendingChange, setPendingChange] = useState<{
-    from: "dashboard" | "whatsapp" | "both" | "none";
-    to: "dashboard" | "whatsapp" | "both";
+    from: "dashboard" | "whatsapp" | "none";
+    to: "dashboard" | "whatsapp";
   } | null>(null);
 
   const currentDelivery = subscription?.alert_delivery ?? INACTIVE_DELIVERY;
@@ -301,12 +302,11 @@ function TargetedJobsPanel({
     (profile?.preferred_locations && profile.preferred_locations.length > 0);
   const profileComplete = !!phone && hasPreferences;
 
-  // Show prompt when no active delivery or profile incomplete
   const showProfilePrompt = !profileComplete || displayDelivery === INACTIVE_DELIVERY;
 
-  const handleRadioClick = (value: "dashboard" | "whatsapp" | "both") => {
+  const handleRadioClick = (value: "dashboard" | "whatsapp") => {
     if (!profileComplete) {
-      return; // prompt already visible
+      return;
     }
 
     if (value === displayDelivery && !pendingChange) return;
@@ -334,7 +334,6 @@ function TargetedJobsPanel({
     const { to } = pendingChange;
     const userFullName = profile?.full_name ?? "User";
 
-    // Cancel always reverts to 'none' (no active alert)
     setDisplayDelivery(INACTIVE_DELIVERY);
     setPendingChange(null);
 
@@ -348,9 +347,9 @@ function TargetedJobsPanel({
       console.error("Cancel failed:", err);
     }
 
-    if (to === "whatsapp" || to === "both") {
+    if (to === "whatsapp") {
       const msg = encodeURIComponent(
-        `${userFullName} attempted to change job alert delivery to ${to}, but cancelled. No active alert delivery selected.`
+        `${userFullName} attempted to change job alert delivery to WhatsApp, but cancelled. No active alert delivery selected.`
       );
       window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${msg}`, "_blank");
     } else if (to === "dashboard") {
@@ -362,8 +361,9 @@ function TargetedJobsPanel({
     <div className="mt-4 rounded-xl border border-brand/20 bg-brand/[0.03] p-4">
       <p className="text-sm font-semibold">How job alerts work</p>
       <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
-        Tell us what kind of jobs you want and where. We’ll match you with the
-        right opportunities and deliver them the way you choose.
+        <strong className="text-foreground">Dashboard</strong> alerts show matched jobs right here on your dashboard.{" "}
+        <strong className="text-foreground">WhatsApp</strong> alerts send matched jobs directly to your phone.
+        Choose the one that fits you best.
       </p>
       <button
         onClick={onSwitchToProfile}
@@ -382,7 +382,7 @@ function TargetedJobsPanel({
       </p>
 
       <div className="mt-3 flex flex-wrap gap-3">
-        {(["dashboard", "whatsapp", "both"] as const).map((option) => {
+        {(["dashboard", "whatsapp"] as const).map((option) => {
           const isCurrent = displayDelivery === option && !pendingChange && !showProfilePrompt;
           const isPending = pendingChange?.to === option;
           const selected = isCurrent || isPending;
@@ -405,7 +405,6 @@ function TargetedJobsPanel({
               />
               {option === "dashboard" && "Dashboard only"}
               {option === "whatsapp" && "WhatsApp reach-out"}
-              {option === "both" && "Both"}
             </label>
           );
         })}
