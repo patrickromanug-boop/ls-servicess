@@ -203,6 +203,99 @@ function DashboardPage() {
     </div>
   );
 }
+
+// ---- Job Listing tab: attractive upsell (free users) + JobFeed ----
+function JobListingTab({
+  userId,
+  hasActivePlan,
+}: {
+  userId: string;
+  hasActivePlan: boolean;
+}) {
+  const subQuery = useQuery({
+    ...subscriptionQueryOptions(),
+    enabled: !!userId,
+  });
+  const profileQuery = useQuery({
+    ...profileQueryOptions(userId),
+    enabled: !!userId,
+  });
+
+  const preferredCategories = profileQuery.data?.preferred_categories ?? [];
+  const preferredLocations = profileQuery.data?.preferred_locations ?? [];
+  const subscription = subQuery.data;
+  // The combined Dashboard + WhatsApp alert is the only delivery option that
+  // prioritises matches in the job listing.
+  const alertDelivery = subscription?.alert_delivery ?? DEFAULT_DELIVERY;
+
+  const showTargeted = !!hasActivePlan && alertDelivery === "both";
+
+  const targetedJobsQuery = useQuery({
+    queryKey: ["targeted-jobs", userId],
+    queryFn: () => fetchTargetedJobs(preferredCategories, preferredLocations),
+    enabled:
+      !!userId &&
+      showTargeted &&
+      (preferredCategories.length > 0 || preferredLocations.length > 0),
+    staleTime: 30_000,
+  });
+
+  const targetedIds = showTargeted
+    ? (targetedJobsQuery.data?.map((job) => job.id) ?? [])
+    : [];
+
+  return (
+    <div>
+      {!hasActivePlan && (
+        <div className="border-brand/20 bg-brand/5 mb-6 rounded-2xl border p-5">
+          <div className="flex items-start gap-3">
+            <div className="bg-brand/10 rounded-xl p-2.5">
+              <Sparkles className="text-brand size-5" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-display text-sm font-bold">
+                Get jobs matched for you
+              </h3>
+              <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+                Tell us what you're looking for and where. We'll put the best
+                matches at the top of this list, and can even send them to you
+                on WhatsApp.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 space-y-2">
+            {[
+              "Choose a plan",
+              "Set your job preferences",
+              "See matched jobs first — or get WhatsApp alerts",
+            ].map((step, idx) => (
+              <div key={idx} className="flex items-center gap-2 text-xs">
+                <span className="bg-brand/10 text-brand flex size-4 items-center justify-center rounded-full">
+                  <Check className="size-2.5" />
+                </span>
+                <span className="text-foreground/80">{step}</span>
+              </div>
+            ))}
+          </div>
+
+          <Link
+            to="/plans"
+            search={{ feature: "targeted-jobs" }}
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-xs font-bold text-white"
+          >
+            Try it out
+          </Link>
+        </div>
+      )}
+
+      <Suspense fallback={<p className="text-muted-foreground text-sm">Loading jobs…</p>}>
+        <JobFeed prioritizedJobIds={targetedIds} />
+      </Suspense>
+    </div>
+  );
+}
+
 // ---- Targeted Jobs Panel (single button for both alerts) ----
 function TargetedJobsPanel({
   userId,
@@ -225,7 +318,6 @@ function TargetedJobsPanel({
 
   const currentDelivery = subscription?.alert_delivery ?? DEFAULT_DELIVERY;
   const [displayDelivery, setDisplayDelivery] = useState(currentDelivery);
-  const [showExplanation, setShowExplanation] = useState(false);
 
   useEffect(() => {
     setDisplayDelivery(currentDelivery);
@@ -236,34 +328,24 @@ function TargetedJobsPanel({
     (profile?.preferred_categories && profile.preferred_categories.length > 0) ||
     (profile?.preferred_locations && profile.preferred_locations.length > 0);
   const profileComplete = !!phone && hasPreferences;
-
-  const isActive = displayDelivery === "both" && !pendingChange;
-  const isPendingEnable = pendingChange?.to === "both";
+  const showProfilePrompt = !profileComplete;
 
   const handleEnableAlerts = async () => {
     if (!profileComplete) {
-      setShowExplanation(true);
       return;
     }
 
-    // If already active, treat as cancel
-    if (isActive) {
-      await handleCancelAlerts();
-      return;
-    }
+    if (displayDelivery === "both" && !pendingChange) return;
 
     const from = displayDelivery;
     setPendingChange({ from, to: "both" });
     setDisplayDelivery("both");
-    setShowExplanation(false);
 
     try {
       const updatedSubscription = await updateAlertDelivery("both");
       queryClient.setQueryData(subscriptionQueryOptions().queryKey, updatedSubscription);
       await queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
       queryClient.invalidateQueries({ queryKey: ["targeted-jobs", userId] });
-      // ✅ Clear pending state so the button becomes active
-      setPendingChange(null);
     } catch (err) {
       console.error(err);
       toast.error("Alerts could not be enabled. Please try again.");
@@ -272,23 +354,23 @@ function TargetedJobsPanel({
     }
   };
 
-  const handleCancelAlerts = async () => {
-    // Revert to the default, which does not prioritise targeted jobs
-    const revertTo = DEFAULT_DELIVERY;
-    setDisplayDelivery(revertTo);
+  const handleCancel = async () => {
+    if (!pendingChange) return;
+    const { from } = pendingChange;
+
+    setDisplayDelivery(from);
     setPendingChange(null);
-    setShowExplanation(true);
 
     try {
-      const updatedSubscription = await updateAlertDelivery(revertTo);
+      const updatedSubscription = await updateAlertDelivery(from);
       queryClient.setQueryData(subscriptionQueryOptions().queryKey, updatedSubscription);
       await queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
       queryClient.removeQueries({ queryKey: ["targeted-jobs", userId] });
     } catch (err) {
       console.error(err);
-      toast.error("Alerts could not be cancelled. Please try again.");
+      toast.error("Your alert preference could not be restored. Please try again.");
       setDisplayDelivery("both");
-      setShowExplanation(false);
+      setPendingChange({ from, to: "both" });
     }
   };
 
@@ -321,21 +403,19 @@ function TargetedJobsPanel({
         <button
           type="button"
           onClick={handleEnableAlerts}
-          className={`w-full rounded-lg px-4 py-2.5 text-sm font-bold transition-colors ${
-            isActive
-              ? "bg-muted text-foreground hover:bg-muted/80"
-              : "bg-brand text-brand-foreground hover:bg-brand/90"
-          }`}
+          disabled={displayDelivery === "both" && !pendingChange}
+          className="border-brand bg-brand text-brand-foreground inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-bold transition-colors disabled:cursor-default disabled:opacity-80"
         >
-          {isActive
-            ? "Dashboard + WhatsApp alerts active — click to cancel"
+          <Check className="size-4" />
+          {displayDelivery === "both" && !pendingChange
+            ? "Dashboard + WhatsApp alerts active"
             : "Enable Dashboard + WhatsApp alerts"}
         </button>
       </div>
 
-      {(showExplanation || !profileComplete) && profilePrompt}
+      {showProfilePrompt && profilePrompt}
 
-      {isPendingEnable && !showExplanation && (
+      {pendingChange && !showProfilePrompt && (
         <div className="mt-4 rounded-xl border border-brand/20 bg-brand/[0.03] p-4">
           <p className="text-xs font-medium">Dashboard + WhatsApp alerts are being enabled.</p>
           <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
@@ -350,7 +430,7 @@ function TargetedJobsPanel({
           </div>
           <div className="mt-3 flex gap-2">
             <button
-              onClick={handleCancelAlerts}
+              onClick={handleCancel}
               className="rounded-lg border border-gray-300 px-4 py-2 text-xs font-bold text-gray-600"
             >
               Cancel
