@@ -198,17 +198,26 @@ function JobListingTab({
   const preferredCategories = profileQuery.data?.preferred_categories ?? [];
   const preferredLocations = profileQuery.data?.preferred_locations ?? [];
 
+  const subscription = subQuery.data;
+  const alertDelivery = subscription?.alert_delivery ?? "dashboard";
+
+  // Show targeted jobs only when alert delivery is dashboard or both
+  const showTargeted = alertDelivery === "dashboard" || alertDelivery === "both";
+
   const targetedJobsQuery = useQuery({
     queryKey: ["targeted-jobs", userId],
     queryFn: () => fetchTargetedJobs(preferredCategories, preferredLocations),
     enabled:
       !!userId &&
       hasActivePlan &&
+      showTargeted &&
       (preferredCategories.length > 0 || preferredLocations.length > 0),
     staleTime: 30_000,
   });
 
-  const targetedIds = targetedJobsQuery.data?.map((job) => job.id) ?? [];
+  const targetedIds = showTargeted
+    ? (targetedJobsQuery.data?.map((job) => job.id) ?? [])
+    : [];
 
   return (
     <div>
