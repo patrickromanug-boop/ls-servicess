@@ -199,17 +199,19 @@ function JobListingTab({
   const preferredLocations = profileQuery.data?.preferred_locations ?? [];
 
   const subscription = subQuery.data;
-  const alertDelivery = subscription?.alert_delivery ?? "dashboard";
+  // Targeted list is opt-in: only "dashboard" or "both" show it. Anything else
+  // (including a missing/unknown preference) keeps the feed unprioritized.
+  const alertDelivery = subscription?.alert_delivery ?? "whatsapp";
 
   // Show targeted jobs only when alert delivery is dashboard or both
-  const showTargeted = alertDelivery === "dashboard" || alertDelivery === "both";
+  const showTargeted =
+    !!hasActivePlan && (alertDelivery === "dashboard" || alertDelivery === "both");
 
   const targetedJobsQuery = useQuery({
     queryKey: ["targeted-jobs", userId],
     queryFn: () => fetchTargetedJobs(preferredCategories, preferredLocations),
     enabled:
       !!userId &&
-      hasActivePlan &&
       showTargeted &&
       (preferredCategories.length > 0 || preferredLocations.length > 0),
     staleTime: 30_000,
@@ -218,6 +220,7 @@ function JobListingTab({
   const targetedIds = showTargeted
     ? (targetedJobsQuery.data?.map((job) => job.id) ?? [])
     : [];
+
 
   return (
     <div>
