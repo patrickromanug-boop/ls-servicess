@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Suspense, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { useAuth } from "@/lib/auth";
@@ -17,12 +18,14 @@ import { BillingSection } from "@/components/dashboard/BillingSection";
 import { DocumentsSection } from "@/components/dashboard/DocumentsSection";
 import { OtherServicesCards } from "@/components/site/OtherServicesCards";
 import { JobFeed } from "@/components/jobs/JobFeed";
-import { createDashboardCancelInquiry } from "@/lib/alert-inquiries";
 import { Sparkles, Check } from "lucide-react";
 
+<<<<<<< HEAD
 const ADMIN_WHATSAPP = "+256772702263";
 const INACTIVE_DELIVERY = "none";
 
+=======
+>>>>>>> b7a0ec2 (Simplify combined job alerts)
 // ---- Tab definitions ----
 const TAB_IDS = {
   "job-listing": "job-listing",
@@ -73,7 +76,9 @@ export const Route = createFileRoute("/dashboard")({
 function DashboardPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState<TabId>("job-listing");
+  const [enableAlertsAfterProfileSave, setEnableAlertsAfterProfileSave] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -114,6 +119,24 @@ function DashboardPage() {
 
   const fullName =
     profileQuery.data?.full_name ?? (user.user_metadata?.["full_name"] as string) ?? "";
+
+  const handleProfileSaved = async () => {
+    if (enableAlertsAfterProfileSave) {
+      try {
+        const updatedSubscription = await updateAlertDelivery("both");
+        queryClient.setQueryData(subscriptionQueryOptions().queryKey, updatedSubscription);
+        await queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
+        queryClient.invalidateQueries({ queryKey: ["targeted-jobs", user.id] });
+      } catch (error) {
+        console.error(error);
+        toast.error("Your profile was saved, but alerts could not be enabled. Please try again.");
+      } finally {
+        setEnableAlertsAfterProfileSave(false);
+      }
+    }
+
+    setTab("job-listing");
+  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -159,14 +182,22 @@ function DashboardPage() {
               userId={user.id}
               subscription={sub}
               profile={profileQuery.data}
-              onSwitchToProfile={() => setTab("profile")}
+              onCompleteProfile={() => {
+                setEnableAlertsAfterProfileSave(true);
+                setTab("profile");
+              }}
+              onEditProfile={() => setTab("profile")}
             />
           )}
           {tab === "documents" && (
             <DocumentsSection user={user} sub={sub} fullName={fullName} />
           )}
           {tab === "profile" && (
+<<<<<<< HEAD
             <ProfileSection user={user} onSaved={() => setTab("job-listing")} />
+=======
+            <ProfileSection user={user} onSaved={handleProfileSaved} />
+>>>>>>> b7a0ec2 (Simplify combined job alerts)
           )}
           {tab === "services" && (
             <Card title="Other services from LS Services">
@@ -199,12 +230,21 @@ function JobListingTab({
 
   const preferredCategories = profileQuery.data?.preferred_categories ?? [];
   const preferredLocations = profileQuery.data?.preferred_locations ?? [];
+<<<<<<< HEAD
 
   const subscription = subQuery.data;
   const alertDelivery = subscription?.alert_delivery ?? INACTIVE_DELIVERY;
 
   const showTargeted =
     !!hasActivePlan && (alertDelivery === "dashboard" || alertDelivery === "both");
+=======
+  const subscription = subQuery.data;
+  // The combined Dashboard + WhatsApp alert is the only delivery option that
+  // prioritises matches in the job listing.
+  const alertDelivery = subscription?.alert_delivery ?? "whatsapp";
+
+  const showTargeted = !!hasActivePlan && alertDelivery === "both";
+>>>>>>> b7a0ec2 (Simplify combined job alerts)
 
   const targetedJobsQuery = useQuery({
     queryKey: ["targeted-jobs", userId],
@@ -277,12 +317,14 @@ function TargetedJobsPanel({
   userId,
   subscription,
   profile,
-  onSwitchToProfile,
+  onCompleteProfile,
+  onEditProfile,
 }: {
   userId: string;
   subscription: WebSubscription | null;
   profile: any;
-  onSwitchToProfile: () => void;
+  onCompleteProfile: () => void;
+  onEditProfile: () => void;
 }) {
   const queryClient = useQueryClient();
   const [pendingChange, setPendingChange] = useState<{
@@ -303,18 +345,40 @@ function TargetedJobsPanel({
     (profile?.preferred_locations && profile.preferred_locations.length > 0);
   const profileComplete = !!phone && hasPreferences;
 
+<<<<<<< HEAD
   const showProfilePrompt = !profileComplete || displayDelivery === INACTIVE_DELIVERY;
 
   const handleEnableAlerts = () => {
+=======
+  const handleEnableAlerts = async () => {
+>>>>>>> b7a0ec2 (Simplify combined job alerts)
     if (!profileComplete) {
       return;
     }
 
     if (displayDelivery === "both" && !pendingChange) return;
 
+<<<<<<< HEAD
     const from = displayDelivery === INACTIVE_DELIVERY ? INACTIVE_DELIVERY : displayDelivery;
     setPendingChange({ from, to: "both" });
     setDisplayDelivery("both");
+=======
+    const from = displayDelivery;
+    setPendingChange({ from, to: "both" });
+    setDisplayDelivery("both");
+
+    try {
+      const updatedSubscription = await updateAlertDelivery("both");
+      queryClient.setQueryData(subscriptionQueryOptions().queryKey, updatedSubscription);
+      await queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
+      queryClient.invalidateQueries({ queryKey: ["targeted-jobs", userId] });
+    } catch (err) {
+      console.error(err);
+      toast.error("Alerts could not be enabled. Please try again.");
+      setDisplayDelivery(from);
+      setPendingChange(null);
+    }
+>>>>>>> b7a0ec2 (Simplify combined job alerts)
 
     updateAlertDelivery("both")
       .then(async () => {
@@ -332,7 +396,11 @@ function TargetedJobsPanel({
 
   const handleCancel = async () => {
     if (!pendingChange) return;
+<<<<<<< HEAD
     const userFullName = profile?.full_name ?? "User";
+=======
+    const { from } = pendingChange;
+>>>>>>> b7a0ec2 (Simplify combined job alerts)
 
     setDisplayDelivery(INACTIVE_DELIVERY);
     setPendingChange(null);
@@ -344,7 +412,14 @@ function TargetedJobsPanel({
       });
       queryClient.removeQueries({ queryKey: ["targeted-jobs", userId] });
     } catch (err) {
+<<<<<<< HEAD
       console.error("Cancel failed:", err);
+=======
+      console.error(err);
+      toast.error("Your alert preference could not be restored. Please try again.");
+      setDisplayDelivery("both");
+      setPendingChange({ from, to: "both" });
+>>>>>>> b7a0ec2 (Simplify combined job alerts)
     }
 
     // Send notification to admin about cancellation of "both" alerts
@@ -358,12 +433,17 @@ function TargetedJobsPanel({
     <div className="mt-4 rounded-xl border border-brand/20 bg-brand/[0.03] p-4">
       <p className="text-sm font-semibold">How job alerts work</p>
       <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+<<<<<<< HEAD
         <strong className="text-foreground">Dashboard</strong> alerts show matched jobs right here on your dashboard.{" "}
         <strong className="text-foreground">WhatsApp</strong> alerts send matched jobs directly to your phone.
         Get both at once for maximum coverage.
+=======
+        Add your job preferences first. Matching jobs will appear in your
+        dashboard, with links also sent through <strong className="font-bold text-foreground">WhatsApp</strong>.
+>>>>>>> b7a0ec2 (Simplify combined job alerts)
       </p>
       <button
-        onClick={onSwitchToProfile}
+        onClick={onCompleteProfile}
         className="mt-3 rounded-lg bg-brand px-4 py-2 text-xs font-bold text-white"
       >
         Try it out
@@ -374,6 +454,7 @@ function TargetedJobsPanel({
   return (
     <div className="border-border rounded-2xl border bg-white p-5">
       <h3 className="font-display text-sm font-bold">Job alert delivery</h3>
+<<<<<<< HEAD
       <p className="text-muted-foreground mt-1 text-xs">
         Receive job alerts on both your dashboard and WhatsApp.
       </p>
@@ -434,6 +515,61 @@ function TargetedJobsPanel({
           </div>
         )}
       </div>
+=======
+      <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+        See matched roles on your dashboard and get them through{" "}
+        <strong className="font-bold text-foreground">WhatsApp</strong> as well.
+      </p>
+
+      <div className="mt-4">
+        <button
+          type="button"
+          onClick={handleEnableAlerts}
+          disabled={displayDelivery === "both" && !pendingChange}
+          className="border-brand bg-brand text-brand-foreground inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-bold transition-colors disabled:cursor-default disabled:opacity-80"
+        >
+          <Check className="size-4" />
+          {displayDelivery === "both" && !pendingChange
+            ? "Dashboard + WhatsApp alerts active"
+            : "Enable Dashboard + WhatsApp alerts"}
+        </button>
+      </div>
+
+      {showProfilePrompt && profilePrompt}
+
+      {pendingChange && !showProfilePrompt && (
+        <div className="mt-4 rounded-xl border border-brand/20 bg-brand/[0.03] p-4">
+          <p className="text-xs font-medium">Dashboard + WhatsApp alerts are being enabled.</p>
+          <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+            {profile?.full_name && <p>Name: {profile.full_name}</p>}
+            {phone && <p>Phone: {phone}</p>}
+            {profile?.preferred_categories?.length > 0 && (
+              <p>Categories: {profile.preferred_categories.join(", ")}</p>
+            )}
+            {profile?.preferred_locations?.length > 0 && (
+              <p>Locations: {profile.preferred_locations.join(", ")}</p>
+            )}
+          </div>
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={handleCancel}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-xs font-bold text-gray-600"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onEditProfile}
+              className="rounded-lg bg-gray-100 px-3 py-2 text-xs font-bold text-gray-500"
+            >
+              Edit Info
+            </button>
+          </div>
+          <p className="text-[11px] text-gray-400 mt-2">
+            Cancel restores your previous alert preference.
+          </p>
+        </div>
+      )}
+>>>>>>> b7a0ec2 (Simplify combined job alerts)
     </div>
   );
 }
