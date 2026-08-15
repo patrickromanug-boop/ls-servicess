@@ -21,7 +21,7 @@ import { createDashboardCancelInquiry } from "@/lib/alert-inquiries";
 import { Sparkles, Check } from "lucide-react";
 
 const ADMIN_WHATSAPP = "+256772702263";
-const DEFAULT_DELIVERY = "whatsapp"; // used when no active alert delivery (cancel state)
+const INACTIVE_DELIVERY = "none";
 
 // ---- Tab definitions ----
 const TAB_IDS = {
@@ -90,7 +90,6 @@ function DashboardPage() {
     enabled: !!user,
   });
 
-  // Redirect to plans if user exists but has no subscription row yet
   useEffect(() => {
     if (user && subQuery.data === null && !subQuery.isLoading) {
       navigate({ to: "/plans", replace: true });
@@ -179,7 +178,7 @@ function DashboardPage() {
   );
 }
 
-// ---- Job Listing tab: attractive upsell (free users) + JobFeed ----
+// ---- Job Listing tab ----
 function JobListingTab({
   userId,
   hasActivePlan,
@@ -200,10 +199,10 @@ function JobListingTab({
   const preferredLocations = profileQuery.data?.preferred_locations ?? [];
 
   const subscription = subQuery.data;
-  const alertDelivery = subscription?.alert_delivery ?? DEFAULT_DELIVERY;
+  const alertDelivery = subscription?.alert_delivery ?? INACTIVE_DELIVERY;
 
-  // Targeted list is shown only for dashboard or both. After cancel we revert to whatsapp -> hidden.
-  const showTargeted = !!hasActivePlan && (alertDelivery === "dashboard" || alertDelivery === "both");
+  const showTargeted =
+    !!hasActivePlan && (alertDelivery === "dashboard" || alertDelivery === "both");
 
   const targetedJobsQuery = useQuery({
     queryKey: ["targeted-jobs", userId],
@@ -271,7 +270,7 @@ function JobListingTab({
   );
 }
 
-// ---- Targeted Jobs Panel (revised flow with permanent cancel) ----
+// ---- Targeted Jobs Panel ----
 function TargetedJobsPanel({
   userId,
   subscription,
@@ -285,18 +284,16 @@ function TargetedJobsPanel({
 }) {
   const queryClient = useQueryClient();
   const [pendingChange, setPendingChange] = useState<{
-    from: "dashboard" | "whatsapp" | "both";
+    from: "dashboard" | "whatsapp" | "both" | "none";
     to: "dashboard" | "whatsapp" | "both";
   } | null>(null);
 
-  const [displayDelivery, setDisplayDelivery] = useState<"dashboard" | "whatsapp" | "both">(
-    subscription?.alert_delivery ?? DEFAULT_DELIVERY
-  );
-  const [showProfilePrompt, setShowProfilePrompt] = useState(false);
+  const currentDelivery = subscription?.alert_delivery ?? INACTIVE_DELIVERY;
+  const [displayDelivery, setDisplayDelivery] = useState(currentDelivery);
 
   useEffect(() => {
-    setDisplayDelivery(subscription?.alert_delivery ?? DEFAULT_DELIVERY);
-  }, [subscription?.alert_delivery]);
+    setDisplayDelivery(currentDelivery);
+  }, [currentDelivery]);
 
   const phone = profile?.phone?.trim();
   const hasPreferences =
@@ -304,15 +301,17 @@ function TargetedJobsPanel({
     (profile?.preferred_locations && profile.preferred_locations.length > 0);
   const profileComplete = !!phone && hasPreferences;
 
+  // Show prompt when no active delivery or profile incomplete
+  const showProfilePrompt = !profileComplete || displayDelivery === INACTIVE_DELIVERY;
+
   const handleRadioClick = (value: "dashboard" | "whatsapp" | "both") => {
     if (!profileComplete) {
-      setShowProfilePrompt(true);
-      return;
+      return; // prompt already visible
     }
 
     if (value === displayDelivery && !pendingChange) return;
 
-    const from = displayDelivery;
+    const from = displayDelivery === INACTIVE_DELIVERY ? INACTIVE_DELIVERY : displayDelivery;
     setPendingChange({ from, to: value });
     setDisplayDelivery(value);
 
@@ -332,15 +331,22 @@ function TargetedJobsPanel({
 
   const handleCancel = async () => {
     if (!pendingChange) return;
-    const userFullName = profile?.full_name ?? "User";
     const { to } = pendingChange;
+    const userFullName = profile?.full_name ?? "User";
 
-    // Cancel always reverts to whatsapp (no targeted jobs) and shows the prompt.
-    const revertTo = "whatsapp";
-
-    setDisplayDelivery(revertTo);
+    // Cancel always reverts to 'none' (no active alert)
+    setDisplayDelivery(INACTIVE_DELIVERY);
     setPendingChange(null);
-    setShowProfilePrompt(true);
+
+    try {
+      await updateAlertDelivery(INACTIVE_DELIVERY);
+      await queryClient.invalidateQueries({
+        queryKey: subscriptionQueryOptions().queryKey,
+      });
+      queryClient.removeQueries({ queryKey: ["targeted-jobs", userId] });
+    } catch (err) {
+      console.error("Cancel failed:", err);
+    }
 
     if (to === "whatsapp" || to === "both") {
       const msg = encodeURIComponent(
@@ -349,16 +355,6 @@ function TargetedJobsPanel({
       window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${msg}`, "_blank");
     } else if (to === "dashboard") {
       await createDashboardCancelInquiry().catch(console.error);
-    }
-
-    try {
-      await updateAlertDelivery(revertTo);
-      await queryClient.invalidateQueries({
-        queryKey: subscriptionQueryOptions().queryKey,
-      });
-      queryClient.removeQueries({ queryKey: ["targeted-jobs", userId] });
-    } catch (err) {
-      console.error("Cancel failed:", err);
     }
   };
 
