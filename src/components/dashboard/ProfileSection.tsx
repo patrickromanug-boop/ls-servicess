@@ -32,11 +32,7 @@ export function ProfileSection({
   onSaved,
 }: {
   user: User;
-<<<<<<< HEAD
-  onSaved?: () => void;
-=======
   onSaved?: () => void | Promise<void>;
->>>>>>> b7a0ec2 (Simplify combined job alerts)
 }) {
   const qc = useQueryClient();
   const navigate = useNavigate();
@@ -91,14 +87,8 @@ export function ProfileSection({
       }),
     onSuccess: async () => {
       toast.success("Profile updated");
-<<<<<<< HEAD
-      void qc.invalidateQueries({ queryKey: ["profile", user.id] });
-      // Trigger the callback to switch to Job Listing tab
-      onSaved?.();
-=======
       await qc.invalidateQueries({ queryKey: ["profile", user.id] });
       await onSaved?.();
->>>>>>> b7a0ec2 (Simplify combined job alerts)
     },
     onError: (e: Error) => toast.error(e.message),
   });
