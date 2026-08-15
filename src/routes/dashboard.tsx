@@ -322,6 +322,7 @@ function TargetedJobsPanel({
     try {
       const updatedSubscription = await updateAlertDelivery(value);
       queryClient.setQueryData(subscriptionQueryOptions().queryKey, updatedSubscription);
+      await queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
       queryClient.invalidateQueries({ queryKey: ["targeted-jobs", userId] });
     } catch (err) {
       console.error(err);
@@ -336,14 +337,12 @@ function TargetedJobsPanel({
     const userFullName = profile?.full_name ?? "User";
     const { from, to } = pendingChange;
 
-    // Cancelling must never leave the cancelled option in place. If the previous
-    // value was the same one being cancelled (e.g. stored default "dashboard"),
-    // fall back to WhatsApp reach-out so the targeted list stays hidden.
-    const revertTo = from === to ? (to === "dashboard" ? "whatsapp" : "dashboard") : from;
+    // A cancel only undoes the choice the user just made. It must never switch
+    // the user to a different delivery channel on its own.
+    const revertTo = from;
 
     setDisplayDelivery(revertTo);
     setPendingChange(null);
-    setShowProfilePrompt(true);
 
     if (to === "whatsapp" || to === "both") {
       const msg = encodeURIComponent(
@@ -357,6 +356,7 @@ function TargetedJobsPanel({
     try {
       const updatedSubscription = await updateAlertDelivery(revertTo);
       queryClient.setQueryData(subscriptionQueryOptions().queryKey, updatedSubscription);
+      await queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
       queryClient.removeQueries({ queryKey: ["targeted-jobs", userId] });
     } catch (err) {
       console.error(err);
