@@ -336,13 +336,18 @@ function TargetedJobsPanel({
     const userFullName = profile?.full_name ?? "User";
     const { from, to } = pendingChange;
 
-    setDisplayDelivery(from);
+    // Cancelling must never leave the cancelled option in place. If the previous
+    // value was the same one being cancelled (e.g. stored default "dashboard"),
+    // fall back to WhatsApp reach-out so the targeted list stays hidden.
+    const revertTo = from === to ? (to === "dashboard" ? "whatsapp" : "dashboard") : from;
+
+    setDisplayDelivery(revertTo);
     setPendingChange(null);
     setShowProfilePrompt(true);
 
     if (to === "whatsapp" || to === "both") {
       const msg = encodeURIComponent(
-        `${userFullName} attempted to change job alert delivery from ${from} to ${to}, but cancelled. Current preference remains ${from}.`
+        `${userFullName} attempted to change job alert delivery from ${from} to ${to}, but cancelled. Current preference remains ${revertTo}.`
       );
       window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${msg}`, "_blank");
     } else if (to === "dashboard") {
@@ -350,12 +355,17 @@ function TargetedJobsPanel({
     }
 
     try {
-      await updateAlertDelivery(from);
-      queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
+      await updateAlertDelivery(revertTo);
+      // Await the refetch so the Job Listing tab never reads a stale preference.
+      await queryClient.invalidateQueries({
+        queryKey: subscriptionQueryOptions().queryKey,
+      });
+      queryClient.removeQueries({ queryKey: ["targeted-jobs", userId] });
     } catch (err) {
       console.error(err);
     }
   };
+
 
   const profilePrompt = (
     <div className="mt-4 rounded-xl border border-brand/20 bg-brand/[0.03] p-4">
