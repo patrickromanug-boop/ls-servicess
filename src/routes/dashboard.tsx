@@ -21,6 +21,7 @@ import { createDashboardCancelInquiry } from "@/lib/alert-inquiries";
 import { Sparkles, Check } from "lucide-react";
 
 const ADMIN_WHATSAPP = "+256772702263";
+const DEFAULT_DELIVERY = "whatsapp"; // used when no active alert delivery (cancel state)
 
 // ---- Tab definitions ----
 const TAB_IDS = {
@@ -197,21 +198,18 @@ function JobListingTab({
 
   const preferredCategories = profileQuery.data?.preferred_categories ?? [];
   const preferredLocations = profileQuery.data?.preferred_locations ?? [];
-  const subscription = subQuery.data;
-  // Targeted list is opt-in: only "dashboard" or "both" show it. Anything else
-  // (including a missing/unknown preference) keeps the feed unprioritized.
-  const alertDelivery = subscription?.alert_delivery ?? "whatsapp";
 
-  // Show targeted jobs only when alert delivery is dashboard or both
-  const showTargeted =
-    !!hasActivePlan && (alertDelivery === "dashboard" || alertDelivery === "both");
+  const subscription = subQuery.data;
+  const alertDelivery = subscription?.alert_delivery ?? DEFAULT_DELIVERY;
+
+  // Targeted list is shown only for dashboard or both. After cancel we revert to whatsapp -> hidden.
+  const showTargeted = !!hasActivePlan && (alertDelivery === "dashboard" || alertDelivery === "both");
 
   const targetedJobsQuery = useQuery({
     queryKey: ["targeted-jobs", userId],
     queryFn: () => fetchTargetedJobs(preferredCategories, preferredLocations),
     enabled:
       !!userId &&
-      hasActivePlan &&
       showTargeted &&
       (preferredCategories.length > 0 || preferredLocations.length > 0),
     staleTime: 30_000,
@@ -273,7 +271,7 @@ function JobListingTab({
   );
 }
 
-// ---- Targeted Jobs Panel (revised flow) ----
+// ---- Targeted Jobs Panel (revised flow with permanent cancel) ----
 function TargetedJobsPanel({
   userId,
   subscription,
@@ -292,14 +290,13 @@ function TargetedJobsPanel({
   } | null>(null);
 
   const [displayDelivery, setDisplayDelivery] = useState<"dashboard" | "whatsapp" | "both">(
-    subscription?.alert_delivery ?? "whatsapp"
+    subscription?.alert_delivery ?? DEFAULT_DELIVERY
   );
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
 
   useEffect(() => {
-    setDisplayDelivery(subscription?.alert_delivery ?? "whatsapp");
+    setDisplayDelivery(subscription?.alert_delivery ?? DEFAULT_DELIVERY);
   }, [subscription?.alert_delivery]);
-
 
   const phone = profile?.phone?.trim();
   const hasPreferences =
@@ -307,7 +304,7 @@ function TargetedJobsPanel({
     (profile?.preferred_locations && profile.preferred_locations.length > 0);
   const profileComplete = !!phone && hasPreferences;
 
-  const handleRadioClick = async (value: "dashboard" | "whatsapp" | "both") => {
+  const handleRadioClick = (value: "dashboard" | "whatsapp" | "both") => {
     if (!profileComplete) {
       setShowProfilePrompt(true);
       return;
@@ -319,34 +316,35 @@ function TargetedJobsPanel({
     setPendingChange({ from, to: value });
     setDisplayDelivery(value);
 
-    try {
-      const updatedSubscription = await updateAlertDelivery(value);
-      queryClient.setQueryData(subscriptionQueryOptions().queryKey, updatedSubscription);
-      await queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
-      queryClient.invalidateQueries({ queryKey: ["targeted-jobs", userId] });
-    } catch (err) {
-      console.error(err);
-      setDisplayDelivery(from);
-      setPendingChange(null);
-    }
-
+    updateAlertDelivery(value)
+      .then(async () => {
+        await queryClient.invalidateQueries({
+          queryKey: subscriptionQueryOptions().queryKey,
+        });
+        queryClient.invalidateQueries({ queryKey: ["targeted-jobs", userId] });
+      })
+      .catch((err) => {
+        console.error(err);
+        setDisplayDelivery(from);
+        setPendingChange(null);
+      });
   };
 
   const handleCancel = async () => {
     if (!pendingChange) return;
     const userFullName = profile?.full_name ?? "User";
-    const { from, to } = pendingChange;
+    const { to } = pendingChange;
 
-    // A cancel only undoes the choice the user just made. It must never switch
-    // the user to a different delivery channel on its own.
-    const revertTo = from;
+    // Cancel always reverts to whatsapp (no targeted jobs) and shows the prompt.
+    const revertTo = "whatsapp";
 
     setDisplayDelivery(revertTo);
     setPendingChange(null);
+    setShowProfilePrompt(true);
 
     if (to === "whatsapp" || to === "both") {
       const msg = encodeURIComponent(
-        `${userFullName} attempted to change job alert delivery from ${from} to ${to}, but cancelled. Current preference remains ${revertTo}.`
+        `${userFullName} attempted to change job alert delivery to ${to}, but cancelled. No active alert delivery selected.`
       );
       window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${msg}`, "_blank");
     } else if (to === "dashboard") {
@@ -354,15 +352,15 @@ function TargetedJobsPanel({
     }
 
     try {
-      const updatedSubscription = await updateAlertDelivery(revertTo);
-      queryClient.setQueryData(subscriptionQueryOptions().queryKey, updatedSubscription);
-      await queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
+      await updateAlertDelivery(revertTo);
+      await queryClient.invalidateQueries({
+        queryKey: subscriptionQueryOptions().queryKey,
+      });
       queryClient.removeQueries({ queryKey: ["targeted-jobs", userId] });
     } catch (err) {
-      console.error(err);
+      console.error("Cancel failed:", err);
     }
   };
-
 
   const profilePrompt = (
     <div className="mt-4 rounded-xl border border-brand/20 bg-brand/[0.03] p-4">
@@ -449,7 +447,7 @@ function TargetedJobsPanel({
             </button>
           </div>
           <p className="text-[11px] text-gray-400 mt-2">
-            If you cancel, your preference will return to {pendingChange.from}.
+            If you cancel, no alert delivery will be active until you save your profile again.
           </p>
         </div>
       )}
