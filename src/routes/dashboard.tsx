@@ -197,7 +197,6 @@ function JobListingTab({
 
   const preferredCategories = profileQuery.data?.preferred_categories ?? [];
   const preferredLocations = profileQuery.data?.preferred_locations ?? [];
-
   const subscription = subQuery.data;
   // Targeted list is opt-in: only "dashboard" or "both" show it. Anything else
   // (including a missing/unknown preference) keeps the feed unprioritized.
@@ -212,6 +211,7 @@ function JobListingTab({
     queryFn: () => fetchTargetedJobs(preferredCategories, preferredLocations),
     enabled:
       !!userId &&
+      hasActivePlan &&
       showTargeted &&
       (preferredCategories.length > 0 || preferredLocations.length > 0),
     staleTime: 30_000,
@@ -220,7 +220,6 @@ function JobListingTab({
   const targetedIds = showTargeted
     ? (targetedJobsQuery.data?.map((job) => job.id) ?? [])
     : [];
-
 
   return (
     <div>
@@ -308,7 +307,7 @@ function TargetedJobsPanel({
     (profile?.preferred_locations && profile.preferred_locations.length > 0);
   const profileComplete = !!phone && hasPreferences;
 
-  const handleRadioClick = (value: "dashboard" | "whatsapp" | "both") => {
+  const handleRadioClick = async (value: "dashboard" | "whatsapp" | "both") => {
     if (!profileComplete) {
       setShowProfilePrompt(true);
       return;
@@ -320,18 +319,15 @@ function TargetedJobsPanel({
     setPendingChange({ from, to: value });
     setDisplayDelivery(value);
 
-    updateAlertDelivery(value)
-      .then(async () => {
-        await queryClient.invalidateQueries({
-          queryKey: subscriptionQueryOptions().queryKey,
-        });
-        queryClient.invalidateQueries({ queryKey: ["targeted-jobs", userId] });
-      })
-      .catch((err) => {
-        console.error(err);
-        setDisplayDelivery(from);
-        setPendingChange(null);
-      });
+    try {
+      const updatedSubscription = await updateAlertDelivery(value);
+      queryClient.setQueryData(subscriptionQueryOptions().queryKey, updatedSubscription);
+      queryClient.invalidateQueries({ queryKey: ["targeted-jobs", userId] });
+    } catch (err) {
+      console.error(err);
+      setDisplayDelivery(from);
+      setPendingChange(null);
+    }
 
   };
 
@@ -359,11 +355,8 @@ function TargetedJobsPanel({
     }
 
     try {
-      await updateAlertDelivery(revertTo);
-      // Await the refetch so the Job Listing tab never reads a stale preference.
-      await queryClient.invalidateQueries({
-        queryKey: subscriptionQueryOptions().queryKey,
-      });
+      const updatedSubscription = await updateAlertDelivery(revertTo);
+      queryClient.setQueryData(subscriptionQueryOptions().queryKey, updatedSubscription);
       queryClient.removeQueries({ queryKey: ["targeted-jobs", userId] });
     } catch (err) {
       console.error(err);
