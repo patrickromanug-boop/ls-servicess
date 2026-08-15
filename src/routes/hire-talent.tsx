@@ -48,7 +48,7 @@ function HireTalentPage() {
     <div className="site-shell flex flex-col">
       <Header />
       <main className="flex-1">
-        <section className="page-grid border-b border-border/70 bg-brand text-brand-foreground">
+        <section className="border-b border-border/70 bg-brand text-brand-foreground">
           <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
             <h1 className="max-w-2xl text-4xl font-bold sm:text-5xl">
               Hire talent. Advertise a job in minutes.
