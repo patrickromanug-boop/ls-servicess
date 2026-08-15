@@ -15,7 +15,7 @@ export type WebSubscription = {
   document_generations_used_this_period: number;
   period_started_at: string;
   payment_provider_ref: string | null;
-  alert_delivery: "dashboard" | "whatsapp" | "both";
+  alert_delivery: "dashboard" | "whatsapp" | "both" | "none";
 };
 
 export type PaymentRow = {
@@ -111,7 +111,7 @@ export async function fetchPendingPlanRequest(): Promise<PlanRequestRow | null> 
 
 /** Update alert delivery preference via secure RPC. */
 export async function updateAlertDelivery(
-  delivery: "dashboard" | "whatsapp" | "both"
+  delivery: "dashboard" | "whatsapp" | "both" | "none"
 ): Promise<WebSubscription> {
   const { data, error } = await supabase.rpc("web_update_alert_delivery", {
     _delivery: delivery,
