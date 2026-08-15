@@ -90,7 +90,6 @@ function DashboardPage() {
     enabled: !!user,
   });
 
-  // Redirect to plans if user exists but has no subscription row yet
   useEffect(() => {
     if (user && subQuery.data === null && !subQuery.isLoading) {
       navigate({ to: "/plans", replace: true });
@@ -166,7 +165,9 @@ function DashboardPage() {
           {tab === "documents" && (
             <DocumentsSection user={user} sub={sub} fullName={fullName} />
           )}
-          {tab === "profile" && <ProfileSection user={user} />}
+          {tab === "profile" && (
+            <ProfileSection user={user} onSaved={() => setTab("job-listing")} />
+          )}
           {tab === "services" && (
             <Card title="Other services from LS Services">
               <OtherServicesCards />
@@ -271,7 +272,7 @@ function JobListingTab({
   );
 }
 
-// ---- Targeted Jobs Panel (only Dashboard and WhatsApp options) ----
+// ---- Targeted Jobs Panel (single button for both alerts) ----
 function TargetedJobsPanel({
   userId,
   subscription,
@@ -285,8 +286,8 @@ function TargetedJobsPanel({
 }) {
   const queryClient = useQueryClient();
   const [pendingChange, setPendingChange] = useState<{
-    from: "dashboard" | "whatsapp" | "none";
-    to: "dashboard" | "whatsapp";
+    from: "dashboard" | "whatsapp" | "both" | "none";
+    to: "both"; // always both when button clicked
   } | null>(null);
 
   const currentDelivery = subscription?.alert_delivery ?? INACTIVE_DELIVERY;
@@ -304,18 +305,18 @@ function TargetedJobsPanel({
 
   const showProfilePrompt = !profileComplete || displayDelivery === INACTIVE_DELIVERY;
 
-  const handleRadioClick = (value: "dashboard" | "whatsapp") => {
+  const handleEnableAlerts = () => {
     if (!profileComplete) {
       return;
     }
 
-    if (value === displayDelivery && !pendingChange) return;
+    if (displayDelivery === "both" && !pendingChange) return;
 
     const from = displayDelivery === INACTIVE_DELIVERY ? INACTIVE_DELIVERY : displayDelivery;
-    setPendingChange({ from, to: value });
-    setDisplayDelivery(value);
+    setPendingChange({ from, to: "both" });
+    setDisplayDelivery("both");
 
-    updateAlertDelivery(value)
+    updateAlertDelivery("both")
       .then(async () => {
         await queryClient.invalidateQueries({
           queryKey: subscriptionQueryOptions().queryKey,
@@ -331,7 +332,6 @@ function TargetedJobsPanel({
 
   const handleCancel = async () => {
     if (!pendingChange) return;
-    const { to } = pendingChange;
     const userFullName = profile?.full_name ?? "User";
 
     setDisplayDelivery(INACTIVE_DELIVERY);
@@ -347,14 +347,11 @@ function TargetedJobsPanel({
       console.error("Cancel failed:", err);
     }
 
-    if (to === "whatsapp") {
-      const msg = encodeURIComponent(
-        `${userFullName} attempted to change job alert delivery to WhatsApp, but cancelled. No active alert delivery selected.`
-      );
-      window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${msg}`, "_blank");
-    } else if (to === "dashboard") {
-      await createDashboardCancelInquiry().catch(console.error);
-    }
+    // Send notification to admin about cancellation of "both" alerts
+    const msg = encodeURIComponent(
+      `${userFullName} cancelled their dashboard & WhatsApp job alerts. No active alert delivery selected.`
+    );
+    window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${msg}`, "_blank");
   };
 
   const profilePrompt = (
@@ -363,7 +360,7 @@ function TargetedJobsPanel({
       <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
         <strong className="text-foreground">Dashboard</strong> alerts show matched jobs right here on your dashboard.{" "}
         <strong className="text-foreground">WhatsApp</strong> alerts send matched jobs directly to your phone.
-        Choose the one that fits you best.
+        Get both at once for maximum coverage.
       </p>
       <button
         onClick={onSwitchToProfile}
@@ -378,74 +375,65 @@ function TargetedJobsPanel({
     <div className="border-border rounded-2xl border bg-white p-5">
       <h3 className="font-display text-sm font-bold">Job alert delivery</h3>
       <p className="text-muted-foreground mt-1 text-xs">
-        Choose how you'd like to receive job matches.
+        Receive job alerts on both your dashboard and WhatsApp.
       </p>
 
-      <div className="mt-3 flex flex-wrap gap-3">
-        {(["dashboard", "whatsapp"] as const).map((option) => {
-          const isCurrent = displayDelivery === option && !pendingChange && !showProfilePrompt;
-          const isPending = pendingChange?.to === option;
-          const selected = isCurrent || isPending;
-          return (
-            <label
-              key={option}
-              className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium cursor-pointer transition-colors ${
-                selected
-                  ? "border-brand bg-brand/10 text-brand"
-                  : "border-border text-muted-foreground hover:border-gray-400"
+      <div className="mt-4">
+        {showProfilePrompt ? (
+          profilePrompt
+        ) : (
+          <div className="space-y-3">
+            <button
+              onClick={handleEnableAlerts}
+              disabled={pendingChange !== null}
+              className={`w-full rounded-lg px-5 py-3 text-sm font-bold ${
+                displayDelivery === "both"
+                  ? "bg-brand text-brand-foreground"
+                  : "border-brand text-brand border-2"
               }`}
             >
-              <input
-                type="radio"
-                name="alert_delivery"
-                value={option}
-                checked={selected}
-                onChange={() => handleRadioClick(option)}
-                className="hidden"
-              />
-              {option === "dashboard" && "Dashboard only"}
-              {option === "whatsapp" && "WhatsApp reach-out"}
-            </label>
-          );
-        })}
+              {displayDelivery === "both"
+                ? "Alerts enabled (Dashboard + WhatsApp)"
+                : "Enable Dashboard & WhatsApp alerts"}
+            </button>
+
+            {pendingChange && displayDelivery === "both" && (
+              <div className="rounded-xl border border-brand/20 bg-brand/[0.03] p-4">
+                <p className="text-xs font-medium">
+                  Alerts are active for both dashboard and WhatsApp.
+                </p>
+                <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+                  {profile?.full_name && <p>Name: {profile.full_name}</p>}
+                  {phone && <p>Phone: {phone}</p>}
+                  {profile?.preferred_categories?.length > 0 && (
+                    <p>Categories: {profile.preferred_categories.join(", ")}</p>
+                  )}
+                  {profile?.preferred_locations?.length > 0 && (
+                    <p>Locations: {profile.preferred_locations.join(", ")}</p>
+                  )}
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={handleCancel}
+                    className="rounded-lg border border-gray-300 px-4 py-2 text-xs font-bold text-gray-600"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={onSwitchToProfile}
+                    className="rounded-lg bg-gray-100 px-3 py-2 text-xs font-bold text-gray-500"
+                  >
+                    Edit Info
+                  </button>
+                </div>
+                <p className="text-[11px] text-gray-400 mt-2">
+                  If you cancel, all alerts will stop until you save your profile again.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-
-      {showProfilePrompt && profilePrompt}
-
-      {pendingChange && !showProfilePrompt && (
-        <div className="mt-4 rounded-xl border border-brand/20 bg-brand/[0.03] p-4">
-          <p className="text-xs font-medium">
-            You’ve selected: <strong className="capitalize">{pendingChange.to}</strong> (previously {pendingChange.from})
-          </p>
-          <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
-            {profile?.full_name && <p>Name: {profile.full_name}</p>}
-            {phone && <p>Phone: {phone}</p>}
-            {profile?.preferred_categories?.length > 0 && (
-              <p>Categories: {profile.preferred_categories.join(", ")}</p>
-            )}
-            {profile?.preferred_locations?.length > 0 && (
-              <p>Locations: {profile.preferred_locations.join(", ")}</p>
-            )}
-          </div>
-          <div className="mt-3 flex gap-2">
-            <button
-              onClick={handleCancel}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-xs font-bold text-gray-600"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={onSwitchToProfile}
-              className="rounded-lg bg-gray-100 px-3 py-2 text-xs font-bold text-gray-500"
-            >
-              Edit Info
-            </button>
-          </div>
-          <p className="text-[11px] text-gray-400 mt-2">
-            If you cancel, no alert delivery will be active until you save your profile again.
-          </p>
-        </div>
-      )}
     </div>
   );
 }
