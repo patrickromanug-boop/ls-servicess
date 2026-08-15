@@ -126,7 +126,6 @@ function DashboardPage() {
           Manage your plan, preferences and documents in one place.
         </p>
 
-        {/* Changed: flex-wrap and pb-2 instead of overflow-x-auto */}
         <div className="border-border mt-6 flex flex-wrap gap-1 border-b pb-2">
           {tabs.map((item) => (
             <button
@@ -263,7 +262,7 @@ function JobListingTab({
   );
 }
 
-// ---- Targeted Jobs Panel (revised: pending change with clear cancel) ----
+// ---- Targeted Jobs Panel (revised flow) ----
 function TargetedJobsPanel({
   userId,
   subscription,
@@ -281,7 +280,14 @@ function TargetedJobsPanel({
     to: "dashboard" | "whatsapp" | "both";
   } | null>(null);
 
-  const currentDelivery = subscription?.alert_delivery ?? "dashboard";
+  const [displayDelivery, setDisplayDelivery] = useState<"dashboard" | "whatsapp" | "both">(
+    subscription?.alert_delivery ?? "dashboard"
+  );
+  const [showProfilePrompt, setShowProfilePrompt] = useState(false);
+
+  useEffect(() => {
+    setDisplayDelivery(subscription?.alert_delivery ?? "dashboard");
+  }, [subscription?.alert_delivery]);
 
   const phone = profile?.phone?.trim();
   const hasPreferences =
@@ -289,23 +295,37 @@ function TargetedJobsPanel({
     (profile?.preferred_locations && profile.preferred_locations.length > 0);
   const profileComplete = !!phone && hasPreferences;
 
-  const handleRadioClick = async (value: "dashboard" | "whatsapp" | "both") => {
-    if (!profileComplete) return;
-    const from = currentDelivery;
-    setPendingChange({ from, to: value });
-    try {
-      await updateAlertDelivery(value);
-      queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
-    } catch (err) {
-      console.error(err);
-      setPendingChange(null);
+  const handleRadioClick = (value: "dashboard" | "whatsapp" | "both") => {
+    if (!profileComplete) {
+      setShowProfilePrompt(true);
+      return;
     }
+
+    if (value === displayDelivery && !pendingChange) return;
+
+    const from = displayDelivery;
+    setPendingChange({ from, to: value });
+    setDisplayDelivery(value);
+
+    updateAlertDelivery(value)
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
+      })
+      .catch((err) => {
+        console.error(err);
+        setDisplayDelivery(from);
+        setPendingChange(null);
+      });
   };
 
   const handleCancel = async () => {
     if (!pendingChange) return;
     const userFullName = profile?.full_name ?? "User";
     const { from, to } = pendingChange;
+
+    setDisplayDelivery(from);
+    setPendingChange(null);
+    setShowProfilePrompt(true);
 
     if (to === "whatsapp" || to === "both") {
       const msg = encodeURIComponent(
@@ -322,26 +342,23 @@ function TargetedJobsPanel({
     } catch (err) {
       console.error(err);
     }
-
-    setPendingChange(null);
   };
 
-  if (!profileComplete) {
-    return (
-      <div className="border-border rounded-2xl border bg-white p-5">
-        <h3 className="font-display text-sm font-bold">Job alert delivery</h3>
-        <p className="text-muted-foreground mt-1 text-xs">
-          Complete your profile to choose how you want to receive job alerts.
-        </p>
-        <button
-          onClick={onSwitchToProfile}
-          className="mt-4 rounded-lg bg-brand px-4 py-2 text-xs font-bold text-white"
-        >
-          Go to Profile
-        </button>
-      </div>
-    );
-  }
+  const profilePrompt = (
+    <div className="mt-4 rounded-xl border border-brand/20 bg-brand/[0.03] p-4">
+      <p className="text-sm font-semibold">How job alerts work</p>
+      <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+        Tell us what kind of jobs you want and where. We’ll match you with the
+        right opportunities and deliver them the way you choose.
+      </p>
+      <button
+        onClick={onSwitchToProfile}
+        className="mt-3 rounded-lg bg-brand px-4 py-2 text-xs font-bold text-white"
+      >
+        Try it out
+      </button>
+    </div>
+  );
 
   return (
     <div className="border-border rounded-2xl border bg-white p-5">
@@ -352,7 +369,7 @@ function TargetedJobsPanel({
 
       <div className="mt-3 flex flex-wrap gap-3">
         {(["dashboard", "whatsapp", "both"] as const).map((option) => {
-          const isCurrent = currentDelivery === option && !pendingChange;
+          const isCurrent = displayDelivery === option && !pendingChange && !showProfilePrompt;
           const isPending = pendingChange?.to === option;
           const selected = isCurrent || isPending;
           return (
@@ -380,7 +397,9 @@ function TargetedJobsPanel({
         })}
       </div>
 
-      {pendingChange && (
+      {showProfilePrompt && profilePrompt}
+
+      {pendingChange && !showProfilePrompt && (
         <div className="mt-4 rounded-xl border border-brand/20 bg-brand/[0.03] p-4">
           <p className="text-xs font-medium">
             You’ve selected: <strong className="capitalize">{pendingChange.to}</strong> (previously {pendingChange.from})
