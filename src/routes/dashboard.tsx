@@ -405,21 +405,23 @@ function TargetedJobsPanel({
               <p>Locations: {profile.preferred_locations.join(", ")}</p>
             )}
           </div>
-          <div className="mt-3 flex gap-2">
-            <button
-              onClick={handleTurnOff}
-              disabled={isTurningOff}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-xs font-bold text-gray-600 disabled:opacity-60"
-            >
-              {isTurningOff ? "Turning off…" : "Cancel"}
-            </button>
-            <button
-              onClick={onEditProfile}
-              className="rounded-lg bg-gray-100 px-3 py-2 text-xs font-bold text-gray-500"
-            >
-              Edit Info
-            </button>
-          </div>
+    <div className="mt-3 flex gap-2">
+  {profileComplete && (
+    <button
+      onClick={handleTurnOff}
+      disabled={isTurningOff}
+      className="rounded-lg border border-gray-300 px-4 py-2 text-xs font-bold text-gray-600 disabled:opacity-60"
+    >
+      {isTurningOff ? "Turning off…" : "Cancel"}
+    </button>
+  )}
+  <button
+    onClick={onEditProfile}
+    className="rounded-lg bg-gray-100 px-3 py-2 text-xs font-bold text-gray-500"
+  >
+    Edit Info
+  </button>
+</div>
         </div>
       )}
     </div>
