@@ -3,17 +3,17 @@ import { Logo } from "./Logo";
 
 export function Footer() {
   return (
-    <footer className="border-border mt-12 border-t bg-muted/55 text-foreground sm:mt-14">
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
+    <footer className="border-border mt-8 border-t bg-muted/55 text-foreground sm:mt-10">
+      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-7 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
         <div>
           <Logo />
-          <p className="text-muted-foreground mt-4 max-w-xs text-sm leading-relaxed">
+          <p className="text-muted-foreground mt-3 max-w-xs text-sm leading-relaxed">
             Helping Ugandans find work — job listings, guidance and document support.
           </p>
         </div>
         <div>
           <h4 className="text-sm font-bold">Jobs</h4>
-          <ul className="text-muted-foreground mt-4 space-y-3 text-sm">
+          <ul className="text-muted-foreground mt-3 space-y-2 text-sm">
             <li>
               <Link to="/jobs" className="transition-colors hover:text-brand">
                 Browse jobs
@@ -28,7 +28,7 @@ export function Footer() {
         </div>
         <div>
           <h4 className="text-sm font-bold">Company</h4>
-          <ul className="text-muted-foreground mt-4 space-y-3 text-sm">
+          <ul className="text-muted-foreground mt-3 space-y-2 text-sm">
             <li>
               <Link to="/about" className="transition-colors hover:text-brand">
                 About us
@@ -43,7 +43,7 @@ export function Footer() {
         </div>
         <div>
           <h4 className="text-sm font-bold">Legal</h4>
-          <ul className="text-muted-foreground mt-4 space-y-3 text-sm">
+          <ul className="text-muted-foreground mt-3 space-y-2 text-sm">
             <li>
               <Link to="/terms" className="transition-colors hover:text-brand">
                 Terms &amp; Conditions
@@ -62,7 +62,7 @@ export function Footer() {
           </ul>
         </div>
       </div>
-      <div className="border-border text-muted-foreground border-t px-4 py-5 text-center text-xs">
+      <div className="border-border text-muted-foreground border-t px-4 py-3 text-center text-xs">
         © {new Date().getFullYear()} LS Services. Kampala, Uganda.
       </div>
     </footer>
