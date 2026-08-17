@@ -1,4 +1,4 @@
-#import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Suspense, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -224,7 +224,7 @@ function JobListingTab({
   const preferredCategories = profileQuery.data?.preferred_categories ?? [];
   const preferredLocations = profileQuery.data?.preferred_locations ?? [];
   const subscription = subQuery.data;
-  // The combined Dashboard + WhatsApp alert is the only delivery option that
+  // Combined Dashboard + WhatsApp alert is the only delivery option that
   // prioritises matches in the job listing.
   const alertDelivery = subscription?.alert_delivery ?? DEFAULT_DELIVERY;
 
@@ -318,6 +318,7 @@ function TargetedJobsPanel({
 
   const currentDelivery = subscription?.alert_delivery ?? DEFAULT_DELIVERY;
   const [displayDelivery, setDisplayDelivery] = useState(currentDelivery);
+  const [showExplanation, setShowExplanation] = useState(false);
 
   useEffect(() => {
     setDisplayDelivery(currentDelivery);
@@ -328,24 +329,33 @@ function TargetedJobsPanel({
     (profile?.preferred_categories && profile.preferred_categories.length > 0) ||
     (profile?.preferred_locations && profile.preferred_locations.length > 0);
   const profileComplete = !!phone && hasPreferences;
-  const showProfilePrompt = !profileComplete;
+
+  const isActive = displayDelivery === "both" && !pendingChange;
+  const isPendingEnable = pendingChange?.to === "both";
 
   const handleEnableAlerts = async () => {
     if (!profileComplete) {
+      setShowExplanation(true);
       return;
     }
 
-    if (displayDelivery === "both" && !pendingChange) return;
+    // If already active, treat as cancel
+    if (isActive) {
+      await handleCancelAlerts();
+      return;
+    }
 
     const from = displayDelivery;
     setPendingChange({ from, to: "both" });
     setDisplayDelivery("both");
+    setShowExplanation(false);
 
     try {
       const updatedSubscription = await updateAlertDelivery("both");
       queryClient.setQueryData(subscriptionQueryOptions().queryKey, updatedSubscription);
       await queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
       queryClient.invalidateQueries({ queryKey: ["targeted-jobs", userId] });
+      setPendingChange(null); // clear pending state so button becomes active
     } catch (err) {
       console.error(err);
       toast.error("Alerts could not be enabled. Please try again.");
@@ -354,23 +364,23 @@ function TargetedJobsPanel({
     }
   };
 
-  const handleCancel = async () => {
-    if (!pendingChange) return;
-    const { from } = pendingChange;
-
-    setDisplayDelivery(from);
+  const handleCancelAlerts = async () => {
+    // Revert to the default, which does not prioritise targeted jobs
+    const revertTo = DEFAULT_DELIVERY;
+    setDisplayDelivery(revertTo);
     setPendingChange(null);
+    setShowExplanation(true);
 
     try {
-      const updatedSubscription = await updateAlertDelivery(from);
+      const updatedSubscription = await updateAlertDelivery(revertTo);
       queryClient.setQueryData(subscriptionQueryOptions().queryKey, updatedSubscription);
       await queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
       queryClient.removeQueries({ queryKey: ["targeted-jobs", userId] });
     } catch (err) {
       console.error(err);
-      toast.error("Your alert preference could not be restored. Please try again.");
+      toast.error("Alerts could not be cancelled. Please try again.");
       setDisplayDelivery("both");
-      setPendingChange({ from, to: "both" });
+      setShowExplanation(false);
     }
   };
 
@@ -403,19 +413,21 @@ function TargetedJobsPanel({
         <button
           type="button"
           onClick={handleEnableAlerts}
-          disabled={displayDelivery === "both" && !pendingChange}
-          className="border-brand bg-brand text-brand-foreground inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-bold transition-colors disabled:cursor-default disabled:opacity-80"
+          className={`w-full rounded-lg px-4 py-2.5 text-sm font-bold transition-colors ${
+            isActive
+              ? "bg-muted text-foreground hover:bg-muted/80"
+              : "bg-brand text-brand-foreground hover:bg-brand/90"
+          }`}
         >
-          <Check className="size-4" />
-          {displayDelivery === "both" && !pendingChange
-            ? "Dashboard + WhatsApp alerts active"
+          {isActive
+            ? "Dashboard + WhatsApp alerts active — click to cancel"
             : "Enable Dashboard + WhatsApp alerts"}
         </button>
       </div>
 
-      {showProfilePrompt && profilePrompt}
+      {(showExplanation || !profileComplete) && profilePrompt}
 
-      {pendingChange && !showProfilePrompt && (
+      {isPendingEnable && !showExplanation && (
         <div className="mt-4 rounded-xl border border-brand/20 bg-brand/[0.03] p-4">
           <p className="text-xs font-medium">Dashboard + WhatsApp alerts are being enabled.</p>
           <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
@@ -430,7 +442,7 @@ function TargetedJobsPanel({
           </div>
           <div className="mt-3 flex gap-2">
             <button
-              onClick={handleCancel}
+              onClick={handleCancelAlerts}
               className="rounded-lg border border-gray-300 px-4 py-2 text-xs font-bold text-gray-600"
             >
               Cancel
