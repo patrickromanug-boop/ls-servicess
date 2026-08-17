@@ -302,104 +302,69 @@ function TargetedJobsPanel({
   profile,
   onCompleteProfile,
   onEditProfile,
-  onActivated, // new prop: called after alerts are enabled, switches to job listing
+  onViewJobs,
 }: {
   userId: string;
   subscription: WebSubscription | null;
   profile: any;
   onCompleteProfile: () => void;
   onEditProfile: () => void;
-  onActivated: () => void;
+  onViewJobs: () => void;
 }) {
   const queryClient = useQueryClient();
-  const [pendingChange, setPendingChange] = useState<{
-    from: "dashboard" | "whatsapp" | "both";
-    to: "both";
-  } | null>(null);
+  const [isEnabling, setIsEnabling] = useState(false);
+  const [isTurningOff, setIsTurningOff] = useState(false);
 
   const currentDelivery = subscription?.alert_delivery ?? DEFAULT_DELIVERY;
-  const [displayDelivery, setDisplayDelivery] = useState(currentDelivery);
-
-  useEffect(() => {
-    setDisplayDelivery(currentDelivery);
-  }, [currentDelivery]);
 
   const phone = profile?.phone?.trim();
   const hasPreferences =
     (profile?.preferred_categories && profile.preferred_categories.length > 0) ||
     (profile?.preferred_locations && profile.preferred_locations.length > 0);
   const profileComplete = !!phone && hasPreferences;
-
-  const isActive = displayDelivery === "both" && !pendingChange;
-  const isPendingEnable = pendingChange?.to === "both";
+  const alertsActive = currentDelivery === "both";
 
   const handleEnableAlerts = async () => {
-    // If profile is incomplete, go to profile page first (will auto-enable after save)
     if (!profileComplete) {
       onCompleteProfile();
       return;
     }
 
-    // If already active, treat as cancel
-    if (isActive) {
-      await handleCancelAlerts();
+    if (alertsActive) {
+      onViewJobs();
       return;
     }
 
-    const from = displayDelivery;
-    setPendingChange({ from, to: "both" });
-    setDisplayDelivery("both");
-
+    setIsEnabling(true);
     try {
       const updatedSubscription = await updateAlertDelivery("both");
       queryClient.setQueryData(subscriptionQueryOptions().queryKey, updatedSubscription);
       await queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
       queryClient.invalidateQueries({ queryKey: ["targeted-jobs", userId] });
-      setPendingChange(null); // clear pending state so button becomes active
-      onActivated(); // switch to job listing to show targeted jobs
+      onViewJobs();
     } catch (err) {
       console.error(err);
       toast.error("Alerts could not be enabled. Please try again.");
-      setDisplayDelivery(from);
-      setPendingChange(null);
+    } finally {
+      setIsEnabling(false);
     }
   };
 
-  const handleCancelAlerts = async () => {
-    // Revert to the default, which does not prioritise targeted jobs
-    const revertTo = DEFAULT_DELIVERY;
-    setDisplayDelivery(revertTo);
-    setPendingChange(null);
-
+  const handleTurnOff = async () => {
+    setIsTurningOff(true);
     try {
-      const updatedSubscription = await updateAlertDelivery(revertTo);
+      const updatedSubscription = await updateAlertDelivery(DEFAULT_DELIVERY);
       queryClient.setQueryData(subscriptionQueryOptions().queryKey, updatedSubscription);
       await queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
       queryClient.removeQueries({ queryKey: ["targeted-jobs", userId] });
+      toast.success("Alerts turned off");
     } catch (err) {
       console.error(err);
-      toast.error("Alerts could not be cancelled. Please try again.");
-      setDisplayDelivery("both");
+      toast.error("Could not turn off alerts. Please try again.");
+    } finally {
+      setIsTurningOff(false);
     }
   };
-
-  // This prompt is intentionally hidden but kept for future use.
-  const profilePrompt = (
-    <div className="mt-4 rounded-xl border border-brand/20 bg-brand/[0.03] p-4">
-      <p className="text-sm font-semibold">How job alerts work</p>
-      <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
-        Add your job preferences first. Matching jobs will appear in your
-        dashboard, with links also sent through{" "}
-        <strong className="font-bold text-foreground">WhatsApp</strong>.
-      </p>
-      <button
-        onClick={onCompleteProfile}
-        className="mt-3 rounded-lg bg-brand px-4 py-2 text-xs font-bold text-white"
-      >
-        Try it out
-      </button>
-    </div>
-  );
 
   return (
     <div className="border-border rounded-2xl border bg-white p-5">
@@ -413,24 +378,23 @@ function TargetedJobsPanel({
         <button
           type="button"
           onClick={handleEnableAlerts}
-          className={`w-full rounded-lg px-4 py-2.5 text-sm font-bold transition-colors ${
-            isActive
-              ? "bg-muted text-foreground hover:bg-muted/80"
-              : "bg-brand text-brand-foreground hover:bg-brand/90"
-          }`}
+          disabled={isEnabling}
+          className="border-brand bg-brand text-brand-foreground inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-bold transition-colors disabled:cursor-default disabled:opacity-80"
         >
-          {isActive
-            ? "Dashboard + WhatsApp alerts active — click to cancel"
-            : "Enable Dashboard + WhatsApp alerts"}
+          <Check className="size-4" />
+          {isEnabling
+            ? "Enabling…"
+            : !profileComplete
+              ? "Set up job alerts"
+              : alertsActive
+                ? "View your matched jobs"
+                : "Enable Dashboard + WhatsApp alerts"}
         </button>
       </div>
 
-      {/* Hidden prompt – code kept but not rendered */}
-      {false && profilePrompt}
-
-      {isPendingEnable && (
+      {alertsActive && (
         <div className="mt-4 rounded-xl border border-brand/20 bg-brand/[0.03] p-4">
-          <p className="text-xs font-medium">Dashboard + WhatsApp alerts are being enabled.</p>
+          <p className="text-xs font-medium">Dashboard + WhatsApp alerts are active.</p>
           <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
             {profile?.full_name && <p>Name: {profile.full_name}</p>}
             {phone && <p>Phone: {phone}</p>}
@@ -443,10 +407,11 @@ function TargetedJobsPanel({
           </div>
           <div className="mt-3 flex gap-2">
             <button
-              onClick={handleCancelAlerts}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-xs font-bold text-gray-600"
+              onClick={handleTurnOff}
+              disabled={isTurningOff}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-xs font-bold text-gray-600 disabled:opacity-60"
             >
-              Cancel
+              {isTurningOff ? "Turning off…" : "Cancel"}
             </button>
             <button
               onClick={onEditProfile}
@@ -455,9 +420,6 @@ function TargetedJobsPanel({
               Edit Info
             </button>
           </div>
-          <p className="text-[11px] text-gray-400 mt-2">
-            Cancel restores your previous alert preference.
-          </p>
         </div>
       )}
     </div>
