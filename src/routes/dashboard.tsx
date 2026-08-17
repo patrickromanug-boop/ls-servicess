@@ -302,12 +302,14 @@ function TargetedJobsPanel({
   profile,
   onCompleteProfile,
   onEditProfile,
+  onActivated, // new prop: called after alerts are enabled, switches to job listing
 }: {
   userId: string;
   subscription: WebSubscription | null;
   profile: any;
   onCompleteProfile: () => void;
   onEditProfile: () => void;
+  onActivated: () => void;
 }) {
   const queryClient = useQueryClient();
   const [pendingChange, setPendingChange] = useState<{
@@ -317,7 +319,6 @@ function TargetedJobsPanel({
 
   const currentDelivery = subscription?.alert_delivery ?? DEFAULT_DELIVERY;
   const [displayDelivery, setDisplayDelivery] = useState(currentDelivery);
-  const [showExplanation, setShowExplanation] = useState(false);
 
   useEffect(() => {
     setDisplayDelivery(currentDelivery);
@@ -333,8 +334,9 @@ function TargetedJobsPanel({
   const isPendingEnable = pendingChange?.to === "both";
 
   const handleEnableAlerts = async () => {
+    // If profile is incomplete, go to profile page first (will auto-enable after save)
     if (!profileComplete) {
-      // We keep the explanation prompt hidden, so we do nothing here.
+      onCompleteProfile();
       return;
     }
 
@@ -347,7 +349,6 @@ function TargetedJobsPanel({
     const from = displayDelivery;
     setPendingChange({ from, to: "both" });
     setDisplayDelivery("both");
-    setShowExplanation(false);
 
     try {
       const updatedSubscription = await updateAlertDelivery("both");
@@ -355,6 +356,7 @@ function TargetedJobsPanel({
       await queryClient.invalidateQueries({ queryKey: subscriptionQueryOptions().queryKey });
       queryClient.invalidateQueries({ queryKey: ["targeted-jobs", userId] });
       setPendingChange(null); // clear pending state so button becomes active
+      onActivated(); // switch to job listing to show targeted jobs
     } catch (err) {
       console.error(err);
       toast.error("Alerts could not be enabled. Please try again.");
@@ -368,7 +370,6 @@ function TargetedJobsPanel({
     const revertTo = DEFAULT_DELIVERY;
     setDisplayDelivery(revertTo);
     setPendingChange(null);
-    setShowExplanation(true);
 
     try {
       const updatedSubscription = await updateAlertDelivery(revertTo);
@@ -379,11 +380,10 @@ function TargetedJobsPanel({
       console.error(err);
       toast.error("Alerts could not be cancelled. Please try again.");
       setDisplayDelivery("both");
-      setShowExplanation(false);
     }
   };
 
-  // This prompt is kept for future use but is intentionally not rendered.
+  // This prompt is intentionally hidden but kept for future use.
   const profilePrompt = (
     <div className="mt-4 rounded-xl border border-brand/20 bg-brand/[0.03] p-4">
       <p className="text-sm font-semibold">How job alerts work</p>
@@ -425,10 +425,10 @@ function TargetedJobsPanel({
         </button>
       </div>
 
-      {/* The prompt is hidden but not removed. */}
+      {/* Hidden prompt – code kept but not rendered */}
       {false && profilePrompt}
 
-      {isPendingEnable && !showExplanation && (
+      {isPendingEnable && (
         <div className="mt-4 rounded-xl border border-brand/20 bg-brand/[0.03] p-4">
           <p className="text-xs font-medium">Dashboard + WhatsApp alerts are being enabled.</p>
           <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
