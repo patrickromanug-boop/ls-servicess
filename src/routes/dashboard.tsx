@@ -18,7 +18,14 @@ import { BillingSection } from "@/components/dashboard/BillingSection";
 import { DocumentsSection } from "@/components/dashboard/DocumentsSection";
 import { OtherServicesCards } from "@/components/site/OtherServicesCards";
 import { JobFeed } from "@/components/jobs/JobFeed";
-import { Sparkles, Check } from "lucide-react";
+import {
+  Sparkles,
+  Check,
+  Briefcase,
+  Bell,
+  User,
+  MoreHorizontal,
+} from "lucide-react";
 
 // Safe default when a subscription row doesn't exist yet or hasn't loaded.
 // Must always be one of the three values the database actually accepts:
@@ -140,7 +147,7 @@ function DashboardPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 pb-24 md:pb-10">
         <h1 className="font-display text-2xl font-bold">
           {fullName ? `Welcome back, ${fullName.split(" ")[0]}` : "Your dashboard"}
         </h1>
@@ -186,6 +193,7 @@ function DashboardPage() {
                 setTab("profile");
               }}
               onEditProfile={() => setTab("profile")}
+              onViewJobs={() => setTab("job-listing")}
             />
           )}
           {tab === "documents" && (
@@ -199,8 +207,74 @@ function DashboardPage() {
           )}
         </div>
       </main>
+
       <Footer />
+
+      {/* Mobile bottom navigation */}
+      <nav
+        className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 backdrop-blur-md md:hidden"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        <div className="mx-auto grid max-w-md grid-cols-4">
+          <BottomNavButton
+            icon={Briefcase}
+            label="Jobs"
+            active={tab === "job-listing"}
+            onClick={() => setTab("job-listing")}
+          />
+          <BottomNavButton
+            icon={Bell}
+            label="Alerts"
+            active={tab === "targeted"}
+            onClick={() => {
+              if (hasActivePlan) {
+                setTab("targeted");
+              } else {
+                navigate({ to: "/plans", search: { feature: "targeted-jobs" } });
+              }
+            }}
+          />
+          <BottomNavButton
+            icon={User}
+            label="Profile"
+            active={tab === "profile"}
+            onClick={() => setTab("profile")}
+          />
+          <BottomNavButton
+            icon={MoreHorizontal}
+            label="More"
+            active={tab === "services" || tab === "bill-plans" || tab === "documents"}
+            onClick={() => setTab("services")}
+          />
+        </div>
+      </nav>
     </div>
+  );
+}
+
+// ---- Bottom navigation button ----
+function BottomNavButton({
+  icon: Icon,
+  label,
+  active,
+  onClick,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  active?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex flex-col items-center justify-center gap-1 py-2 text-[11px] font-semibold transition-colors ${
+        active ? "text-brand" : "text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      <Icon className="size-5" />
+      {label}
+    </button>
   );
 }
 
@@ -224,8 +298,6 @@ function JobListingTab({
   const preferredCategories = profileQuery.data?.preferred_categories ?? [];
   const preferredLocations = profileQuery.data?.preferred_locations ?? [];
   const subscription = subQuery.data;
-  // Combined Dashboard + WhatsApp alert is the only delivery option that
-  // prioritises matches in the job listing.
   const alertDelivery = subscription?.alert_delivery ?? DEFAULT_DELIVERY;
 
   const showTargeted = !!hasActivePlan && alertDelivery === "both";
@@ -295,6 +367,7 @@ function JobListingTab({
     </div>
   );
 }
+
 // ---- Targeted Jobs Panel (single button for both alerts) ----
 function TargetedJobsPanel({
   userId,
@@ -405,23 +478,23 @@ function TargetedJobsPanel({
               <p>Locations: {profile.preferred_locations.join(", ")}</p>
             )}
           </div>
-    <div className="mt-3 flex gap-2">
-  {profileComplete && (
-    <button
-      onClick={handleTurnOff}
-      disabled={isTurningOff}
-      className="rounded-lg border border-gray-300 px-4 py-2 text-xs font-bold text-gray-600 disabled:opacity-60"
-    >
-      {isTurningOff ? "Turning off…" : "Cancel"}
-    </button>
-  )}
-  <button
-    onClick={onEditProfile}
-    className="rounded-lg bg-gray-100 px-3 py-2 text-xs font-bold text-gray-500"
-  >
-    Edit Info
-  </button>
-</div>
+          <div className="mt-3 flex gap-2">
+            {profileComplete && (
+              <button
+                onClick={handleTurnOff}
+                disabled={isTurningOff}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-xs font-bold text-gray-600 disabled:opacity-60"
+              >
+                {isTurningOff ? "Turning off…" : "Cancel"}
+              </button>
+            )}
+            <button
+              onClick={onEditProfile}
+              className="rounded-lg bg-gray-100 px-3 py-2 text-xs font-bold text-gray-500"
+            >
+              Edit Info
+            </button>
+          </div>
         </div>
       )}
     </div>
