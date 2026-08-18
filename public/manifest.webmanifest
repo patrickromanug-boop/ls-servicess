@@ -1,0 +1,22 @@
+{
+  "name": "LS Services — Find Jobs in Uganda",
+  "short_name": "LS Services",
+  "description": "Helping Ugandans find work — job listings, guidance and document support.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#14204F",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
