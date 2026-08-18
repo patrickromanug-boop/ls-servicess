@@ -86,6 +86,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "LS Services helps Ugandans find work. Browse verified job openings, filter by category and location, and apply through official links.",
       },
       { name: "author", content: "LS Services" },
+      { name: "theme-color", content: "#14204F" },
       { property: "og:title", content: "LS Services — Find Jobs in Uganda" },
       {
         property: "og:description",
@@ -102,6 +103,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
       { rel: "apple-touch-icon", href: "/favicon.png" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+    ],
+    scripts: [
+      {
+        children: `
+          if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+              navigator.serviceWorker.register('/sw.js')
+                .then(() => console.log('Service worker registered'))
+                .catch((err) => console.error('Service worker registration failed:', err));
+            });
+          }
+        `,
+      },
     ],
   }),
   shellComponent: RootShell,
@@ -137,4 +152,3 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
-
