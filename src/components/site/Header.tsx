@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { Menu, X, Download } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Logo } from "./Logo";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
@@ -12,15 +12,61 @@ const NAV = [
   { to: "/contact", label: "Contact" },
 ] as const;
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+}
+
 export function Header() {
   const [open, setOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e as BeforeInstallPromptEvent);
+    };
+    const installedHandler = () => {
+      setIsInstalled(true);
+      setInstallPrompt(null);
+    };
+
+    window.addEventListener("beforeinstallprompt", handler);
+    window.addEventListener("appinstalled", installedHandler);
+
+    // Check if already installed (standalone display)
+    if (window.matchMedia("(display-mode: standalone)").matches || navigator.standalone) {
+      setIsInstalled(true);
+    }
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+      window.removeEventListener("appinstalled", installedHandler);
+    };
+  }, []);
+
+  async function handleInstall() {
+    if (!installPrompt) return;
+    await installPrompt.prompt();
+    const choice = await installPrompt.userChoice;
+    if (choice.outcome === "accepted") {
+      setInstallPrompt(null);
+      setIsInstalled(true);
+    } else {
+      setInstallPrompt(null);
+    }
+  }
+
   async function signOut() {
     await supabase.auth.signOut();
     navigate({ to: "/", replace: true });
   }
+
+  const showInstallButton = installPrompt && !isInstalled;
 
   return (
     <header className="border-border/80 bg-background/90 sticky top-0 z-40 border-b backdrop-blur-md">
@@ -62,13 +108,25 @@ export function Header() {
             </Link>
           )}
         </nav>
-        <button
-          className="border-border bg-card grid size-10 place-items-center rounded-full border md:hidden"
-          onClick={() => setOpen((v) => !v)}
-          aria-label="Toggle navigation"
-        >
-          {open ? <X className="size-6" /> : <Menu className="size-6" />}
-        </button>
+
+        <div className="flex items-center gap-2">
+          {showInstallButton && (
+            <button
+              onClick={handleInstall}
+              className="border-border bg-card text-foreground hover:border-brand hover:text-brand grid size-10 place-items-center rounded-full border transition-colors"
+              aria-label="Install app"
+            >
+              <Download className="size-4" />
+            </button>
+          )}
+          <button
+            className="border-border bg-card grid size-10 place-items-center rounded-full border md:hidden"
+            onClick={() => setOpen((v) => !v)}
+            aria-label="Toggle navigation"
+          >
+            {open ? <X className="size-6" /> : <Menu className="size-6" />}
+          </button>
+        </div>
       </div>
       {open && (
         <div className="border-border bg-background border-t px-4 py-4 shadow-lg md:hidden">
