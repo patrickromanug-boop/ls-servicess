@@ -17,30 +17,42 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 }
 
+// Module-level variable: survives Header remounts
+let deferredPrompt: BeforeInstallPromptEvent | null = null;
+let isAppInstalled = false;
+
 export function Header() {
   const [open, setOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstalled, setIsInstalled] = useState(false);
+  // Use state only to trigger re-render after install or prompt changes
+  const [installPromptAvailable, setInstallPromptAvailable] = useState(!!deferredPrompt);
+  const [installed, setInstalled] = useState(isAppInstalled);
 
   useEffect(() => {
     const handler = (e: Event) => {
       e.preventDefault();
-      setInstallPrompt(e as BeforeInstallPromptEvent);
+      deferredPrompt = e as BeforeInstallPromptEvent;
+      setInstallPromptAvailable(true);
     };
+
     const installedHandler = () => {
-      setIsInstalled(true);
-      setInstallPrompt(null);
+      isAppInstalled = true;
+      deferredPrompt = null;
+      setInstalled(true);
+      setInstallPromptAvailable(false);
     };
 
     window.addEventListener("beforeinstallprompt", handler);
     window.addEventListener("appinstalled", installedHandler);
 
     // Check if already installed (standalone display)
-    if (window.matchMedia("(display-mode: standalone)").matches || navigator.standalone) {
-      setIsInstalled(true);
+    if (window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone) {
+      isAppInstalled = true;
+      deferredPrompt = null;
+      setInstalled(true);
+      setInstallPromptAvailable(false);
     }
 
     return () => {
@@ -50,14 +62,17 @@ export function Header() {
   }, []);
 
   async function handleInstall() {
-    if (!installPrompt) return;
-    await installPrompt.prompt();
-    const choice = await installPrompt.userChoice;
+    if (!deferredPrompt) return;
+    await deferredPrompt.prompt();
+    const choice = await deferredPrompt.userChoice;
     if (choice.outcome === "accepted") {
-      setInstallPrompt(null);
-      setIsInstalled(true);
+      isAppInstalled = true;
+      deferredPrompt = null;
+      setInstalled(true);
+      setInstallPromptAvailable(false);
     } else {
-      setInstallPrompt(null);
+      deferredPrompt = null;
+      setInstallPromptAvailable(false);
     }
   }
 
@@ -66,7 +81,7 @@ export function Header() {
     navigate({ to: "/", replace: true });
   }
 
-  const showInstallButton = installPrompt && !isInstalled;
+  const showInstallButton = installPromptAvailable && !installed;
 
   return (
     <header className="border-border/80 bg-background/90 sticky top-0 z-40 border-b backdrop-blur-md">
