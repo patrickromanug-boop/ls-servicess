@@ -39,6 +39,7 @@ export function Header() {
   // Use state only to trigger re-render after install or prompt changes
   const [installPromptAvailable, setInstallPromptAvailable] = useState(!!deferredPrompt);
   const [installed, setInstalled] = useState(isAppInstalled);
+  const [installing, setInstalling] = useState(false);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -50,6 +51,7 @@ export function Header() {
     const installedHandler = () => {
       isAppInstalled = true;
       deferredPrompt = null;
+      setInstalling(false);
       setInstalled(true);
       setInstallPromptAvailable(false);
     };
@@ -80,10 +82,14 @@ export function Header() {
     await deferredPrompt.prompt();
     const choice = await deferredPrompt.userChoice;
     if (choice.outcome === "accepted") {
-      isAppInstalled = true;
+      setInstalling(true);
+      window.setTimeout(() => {
+        if (!isAppInstalled) {
+          setInstalling(false);
+          toast.error("The browser could not complete the app installation. Please try again.");
+        }
+      }, 15000);
       deferredPrompt = null;
-      setInstalled(true);
-      setInstallPromptAvailable(false);
     } else {
       deferredPrompt = null;
       setInstallPromptAvailable(false);
@@ -144,12 +150,13 @@ export function Header() {
           {showInstallButton && (
             <button
               onClick={handleInstall}
+              disabled={installing}
               className="border-border bg-card text-foreground hover:border-brand hover:text-brand inline-flex h-10 items-center gap-2 rounded-full border px-3 transition-colors"
               aria-label="Install app"
               title="Install app"
             >
               <Download className="size-4" />
-              <span className="hidden text-xs font-semibold sm:inline">Install app</span>
+              <span className="hidden text-xs font-semibold sm:inline">{installing ? "Installing…" : "Install app"}</span>
             </button>
           )}
           <button
