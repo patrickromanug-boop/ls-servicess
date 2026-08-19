@@ -25,6 +25,8 @@ import {
   Bell,
   User,
   MoreHorizontal,
+  Moon,
+  Sun,
 } from "lucide-react";
 
 // Safe default when a subscription row doesn't exist yet or hasn't loaded.
@@ -78,6 +80,55 @@ export const Route = createFileRoute("/dashboard")({
   }),
   component: DashboardPage,
 });
+
+function MobileAppBar({ tab }: { tab: TabId }) {
+  const [dark, setDark] = useState(false);
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem("ls-theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const isDark = saved ? saved === "dark" : prefersDark;
+    document.documentElement.classList.toggle("dark", isDark);
+    setDark(isDark);
+  }, []);
+
+  const title =
+    tab === "targeted"
+      ? "Job alerts"
+      : tab === "profile"
+        ? "Profile"
+        : tab === "services"
+          ? "More"
+          : tab === "bill-plans"
+            ? "Plans & billing"
+            : tab === "documents"
+              ? "Documents"
+              : "Jobs";
+
+  const toggleTheme = () => {
+    const next = !dark;
+    document.documentElement.classList.toggle("dark", next);
+    window.localStorage.setItem("ls-theme", next ? "dark" : "light");
+    setDark(next);
+  };
+
+  return (
+    <header className="bg-background/95 sticky top-0 z-40 flex h-14 items-center justify-between border-b px-4 backdrop-blur-md md:hidden">
+      <div>
+        <p className="text-brand text-[10px] font-extrabold uppercase tracking-[0.18em]">LS Services</p>
+        <h1 className="font-display text-base font-bold leading-tight">{title}</h1>
+      </div>
+      <button
+        type="button"
+        onClick={toggleTheme}
+        className="border-border bg-card text-foreground grid size-9 place-items-center rounded-full border"
+        aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
+      >
+        {dark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+      </button>
+    </header>
+  );
+}
 
 function DashboardPage() {
   const { user, loading } = useAuth();
@@ -146,8 +197,9 @@ function DashboardPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header />
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 pb-24 md:pb-10">
+      <div className="hidden md:block"><Header /></div>
+      <MobileAppBar tab={tab} />
+      <main className="mx-auto flex min-h-[calc(100vh-9rem)] w-full max-w-5xl flex-1 px-4 py-0 pb-[calc(6rem+env(safe-area-inset-bottom))] md:min-h-0 md:px-4 md:py-10 md:pb-10">
         <h1 className="font-display text-2xl font-bold">
           {fullName ? `Welcome back, ${fullName.split(" ")[0]}` : "Your dashboard"}
         </h1>
@@ -155,7 +207,7 @@ function DashboardPage() {
           Manage your plan, preferences and documents in one place.
         </p>
 
-        <div className="border-border mt-6 flex flex-wrap gap-1 border-b pb-2">
+        <div className="hidden border-border mt-6 flex-wrap gap-1 border-b pb-2 md:flex">
           {tabs.map((item) => (
             <button
               key={item.id}
@@ -171,7 +223,7 @@ function DashboardPage() {
           ))}
         </div>
 
-        <div className="mt-6">
+        <div className="mt-4 min-h-[calc(100vh-9rem)] md:mt-6 md:min-h-0">
           {tab === "job-listing" && (
             <JobListingTab userId={user.id} hasActivePlan={!!hasActivePlan} />
           )}
@@ -208,7 +260,7 @@ function DashboardPage() {
         </div>
       </main>
 
-      <Footer />
+      <div className="hidden md:block"><Footer /></div>
 
       {/* Mobile bottom navigation */}
       <nav
