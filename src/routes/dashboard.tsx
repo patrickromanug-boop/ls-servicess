@@ -197,10 +197,10 @@ function DashboardPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <div className="hidden md:block"><Header /></div>
+      <div className="pwa-site-desktop"><Header /></div>
       <MobileAppBar tab={tab} />
-      <main className="mx-auto flex min-h-[calc(100vh-9rem)] w-full max-w-5xl flex-1 px-4 py-0 pb-[calc(6rem+env(safe-area-inset-bottom))] md:min-h-0 md:px-4 md:py-10 md:pb-10">
-        <div className="hidden md:block">
+      <main className="pwa-dashboard-main mx-auto w-full max-w-5xl flex-1 px-4 py-10 pb-24 md:pb-10">
+        <div className="pwa-dashboard-desktop-only">
           <h1 className="font-display text-2xl font-bold">
             {fullName ? `Welcome back, ${fullName.split(" ")[0]}` : "Your dashboard"}
           </h1>
@@ -209,7 +209,7 @@ function DashboardPage() {
           </p>
         </div>
 
-        <div className="hidden border-border mt-6 flex-wrap gap-1 border-b pb-2 md:flex">
+        <div className="pwa-dashboard-desktop-only border-border mt-6 flex flex-wrap gap-1 border-b pb-2">
           {tabs.map((item) => (
             <button
               key={item.id}
@@ -225,7 +225,7 @@ function DashboardPage() {
           ))}
         </div>
 
-        <div className="mt-4 min-h-[calc(100vh-9rem)] md:mt-6 md:min-h-0">
+        <div className="mt-6">
           {tab === "job-listing" && (
             <JobListingTab userId={user.id} hasActivePlan={!!hasActivePlan} />
           )}
@@ -262,11 +262,11 @@ function DashboardPage() {
         </div>
       </main>
 
-      <div className="hidden md:block"><Footer /></div>
+      <div className="pwa-site-desktop"><Footer /></div>
 
       {/* Mobile bottom navigation */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 backdrop-blur-md md:hidden"
+        className="pwa-bottom-nav fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 backdrop-blur-md"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <div className="mx-auto grid max-w-md grid-cols-4">
