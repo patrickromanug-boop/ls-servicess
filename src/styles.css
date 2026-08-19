@@ -213,3 +213,40 @@ button[class*="lovable"] {
   width: 0 !important;
   height: 0 !important;
 }
+
+
+/* Installed PWA shell: browser/regular responsive site remains unchanged. */
+.pwa-app-bar,
+.pwa-bottom-nav {
+  display: none;
+}
+
+@media (display-mode: standalone) {
+  .pwa-app-bar {
+    display: flex;
+    min-height: 3.5rem;
+  }
+
+  .pwa-site-desktop,
+  .pwa-dashboard-desktop-only {
+    display: none;
+  }
+
+  .pwa-dashboard-main {
+    min-height: calc(100vh - 9rem);
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+  }
+
+  .pwa-bottom-nav {
+    display: block;
+  }
+}
+
+@supports (-webkit-touch-callout: none) {
+  @media (display-mode: standalone) {
+    .pwa-app-bar {
+      padding-top: env(safe-area-inset-top);
+      min-height: calc(3.5rem + env(safe-area-inset-top));
+    }
+  }
+}
