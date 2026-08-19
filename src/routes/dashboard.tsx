@@ -200,12 +200,14 @@ function DashboardPage() {
       <div className="hidden md:block"><Header /></div>
       <MobileAppBar tab={tab} />
       <main className="mx-auto flex min-h-[calc(100vh-9rem)] w-full max-w-5xl flex-1 px-4 py-0 pb-[calc(6rem+env(safe-area-inset-bottom))] md:min-h-0 md:px-4 md:py-10 md:pb-10">
-        <h1 className="font-display text-2xl font-bold">
-          {fullName ? `Welcome back, ${fullName.split(" ")[0]}` : "Your dashboard"}
-        </h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          Manage your plan, preferences and documents in one place.
-        </p>
+        <div className="hidden md:block">
+          <h1 className="font-display text-2xl font-bold">
+            {fullName ? `Welcome back, ${fullName.split(" ")[0]}` : "Your dashboard"}
+          </h1>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Manage your plan, preferences and documents in one place.
+          </p>
+        </div>
 
         <div className="hidden border-border mt-6 flex-wrap gap-1 border-b pb-2 md:flex">
           {tabs.map((item) => (
