@@ -128,10 +128,12 @@ export function Header() {
           {showInstallButton && (
             <button
               onClick={handleInstall}
-              className="border-border bg-card text-foreground hover:border-brand hover:text-brand grid size-10 place-items-center rounded-full border transition-colors"
+              className="border-border bg-card text-foreground hover:border-brand hover:text-brand inline-flex h-10 items-center gap-2 rounded-full border px-3 transition-colors"
               aria-label="Install app"
+              title="Install app"
             >
               <Download className="size-4" />
+              <span className="hidden text-xs font-semibold sm:inline">Install app</span>
             </button>
           )}
           <button
