@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Menu, X, Download } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Logo } from "./Logo";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
@@ -62,7 +63,15 @@ export function Header() {
   }, []);
 
   async function handleInstall() {
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) {
+      const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) && !(navigator as any).standalone;
+      toast.info(
+        isIos
+          ? "To install LS Services, tap Share, then Add to Home Screen."
+          : "Open your browser menu and choose Install app or Add to home screen."
+      );
+      return;
+    }
     await deferredPrompt.prompt();
     const choice = await deferredPrompt.userChoice;
     if (choice.outcome === "accepted") {
@@ -81,7 +90,9 @@ export function Header() {
     navigate({ to: "/", replace: true });
   }
 
-  const showInstallButton = installPromptAvailable && !installed;
+  // Keep the control visible until the app is installed; browsers that do not expose
+  // beforeinstallprompt receive platform-specific instructions on click.
+  const showInstallButton = !installed;
 
   return (
     <header className="border-border/80 bg-background/90 sticky top-0 z-40 border-b backdrop-blur-md">
