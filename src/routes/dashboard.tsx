@@ -25,8 +25,6 @@ import {
   Bell,
   User,
   MoreHorizontal,
-  Moon,
-  Sun,
 } from "lucide-react";
 
 // Safe default when a subscription row doesn't exist yet or hasn't loaded.
@@ -82,16 +80,6 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function MobileAppBar({ tab }: { tab: TabId }) {
-  const [dark, setDark] = useState(false);
-
-  useEffect(() => {
-    const saved = window.localStorage.getItem("ls-theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const isDark = saved ? saved === "dark" : prefersDark;
-    document.documentElement.classList.toggle("dark", isDark);
-    setDark(isDark);
-  }, []);
-
   const title =
     tab === "targeted"
       ? "Job alerts"
@@ -105,27 +93,13 @@ function MobileAppBar({ tab }: { tab: TabId }) {
               ? "Documents"
               : "Jobs";
 
-  const toggleTheme = () => {
-    const next = !dark;
-    document.documentElement.classList.toggle("dark", next);
-    window.localStorage.setItem("ls-theme", next ? "dark" : "light");
-    setDark(next);
-  };
 
   return (
-    <header className="bg-background/95 sticky top-0 z-40 flex h-14 items-center justify-between border-b px-4 backdrop-blur-md md:hidden">
+    <header className="bg-background/95 sticky top-0 z-40 flex h-14 items-center border-b px-4 backdrop-blur-md md:hidden">
       <div>
         <p className="text-brand text-[10px] font-extrabold uppercase tracking-[0.18em]">LS Services</p>
         <h1 className="font-display text-base font-bold leading-tight">{title}</h1>
       </div>
-      <button
-        type="button"
-        onClick={toggleTheme}
-        className="border-border bg-card text-foreground grid size-9 place-items-center rounded-full border"
-        aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
-      >
-        {dark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-      </button>
     </header>
   );
 }
