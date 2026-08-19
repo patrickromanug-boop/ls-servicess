@@ -22,6 +22,15 @@ interface BeforeInstallPromptEvent extends Event {
 let deferredPrompt: BeforeInstallPromptEvent | null = null;
 let isAppInstalled = false;
 
+// Capture the browser install event as early as possible. Some browsers emit it
+// before the header component has mounted.
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferredPrompt = event as BeforeInstallPromptEvent;
+  });
+}
+
 export function Header() {
   const [open, setOpen] = useState(false);
   const { user } = useAuth();
@@ -47,6 +56,7 @@ export function Header() {
 
     window.addEventListener("beforeinstallprompt", handler);
     window.addEventListener("appinstalled", installedHandler);
+    setInstallPromptAvailable(!!deferredPrompt);
 
     // Check if already installed (standalone display)
     if (window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone) {
@@ -64,12 +74,7 @@ export function Header() {
 
   async function handleInstall() {
     if (!deferredPrompt) {
-      const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) && !(navigator as any).standalone;
-      toast.info(
-        isIos
-          ? "To install LS Services, tap Share, then Add to Home Screen."
-          : "Open your browser menu and choose Install app or Add to home screen."
-      );
+      toast.error("The browser has not made the native installation prompt available.");
       return;
     }
     await deferredPrompt.prompt();
