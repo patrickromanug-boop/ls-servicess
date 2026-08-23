@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { Suspense, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -109,8 +109,11 @@ function MobileAppBar({ tab }: { tab: TabId }) {
 function DashboardPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const search = useSearch({ strict: false }) as { tab?: string };
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState<TabId>("job-listing");
+  const [tab, setTab] = useState<TabId>(() =>
+    search.tab === "services" ? "services" : "job-listing"
+  );
   const [enableAlertsAfterProfileSave, setEnableAlertsAfterProfileSave] = useState(false);
 
   useEffect(() => {
