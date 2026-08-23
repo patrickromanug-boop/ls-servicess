@@ -7,11 +7,11 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { AuthProvider } from "../lib/auth";
+import { AuthProvider, useAuth } from "../lib/auth";
 import { Toaster } from "../components/ui/sonner";
 
 function NotFoundComponent() {
@@ -139,12 +139,77 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function SitePromoPopup() {
+  const { user, loading } = useAuth();
+  const navigate = useRouter();
+  const [visible, setVisible] = useState(false);
+  const [promo, setPromo] = useState<"targeted-jobs" | "other-services">("targeted-jobs");
+
+  useEffect(() => {
+    if (loading || typeof window === "undefined" || window.location.pathname.startsWith("/admin")) return;
+
+    const seenKey = user ? `ls-promo-other-services-seen:${user.id}` : "ls-promo-targeted-jobs-seen";
+    if (window.localStorage.getItem(seenKey) === "1") return;
+
+    const timer = window.setTimeout(() => {
+      window.localStorage.setItem(seenKey, "1");
+      setPromo(user ? "other-services" : "targeted-jobs");
+      setVisible(true);
+    }, 10000);
+
+    return () => window.clearTimeout(timer);
+  }, [loading, user]);
+
+  if (!visible) return null;
+
+  const isVisitor = promo === "targeted-jobs";
+  const close = () => setVisible(false);
+  const tryItNow = () => {
+    close();
+    if (isVisitor) {
+      navigate.navigate({ to: "/auth/login", search: { redirect: "/plans?feature=targeted-jobs" } });
+    } else {
+      navigate.navigate({ to: "/dashboard" });
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] grid place-items-center bg-black/45 px-4 py-6" role="presentation">
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="site-promo-title"
+        className="bg-background w-full max-w-md rounded-3xl border p-6 shadow-2xl sm:p-7"
+      >
+        <p className="text-brand text-[10px] font-extrabold uppercase tracking-[0.18em]">LS Services</p>
+        <h2 id="site-promo-title" className="font-display mt-2 text-2xl font-bold">
+          {isVisitor ? "Find jobs matched to you" : "More ways LS Services can help"}
+        </h2>
+        <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
+          {isVisitor
+            ? "Set your preferred job categories and locations, then get relevant openings brought to the top of your dashboard. With an eligible plan or trial, you can also receive matching job links through WhatsApp."
+            : "Explore our other services for business and career support: reliable bulk SMS, business registration and compliance help, websites, mobile apps and custom systems for Ugandan businesses."}
+        </p>
+        <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button type="button" onClick={close} className="border-border text-foreground rounded-xl border px-4 py-3 text-sm font-bold">
+            Cancel
+          </button>
+          <button type="button" onClick={tryItNow} className="bg-brand text-brand-foreground rounded-xl px-4 py-3 text-sm font-bold">
+            Try it now
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <SitePromoPopup />
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
         <Toaster />
