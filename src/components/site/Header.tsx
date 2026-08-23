@@ -101,9 +101,10 @@ export function Header() {
     navigate({ to: "/", replace: true });
   }
 
-  // Keep the control visible until the app is installed; browsers that do not expose
-  // beforeinstallprompt receive platform-specific instructions on click.
-  const showInstallButton = !installed;
+  // Installation remains available in the codebase, but the public button is
+  // intentionally disabled until the site launch is ready for the PWA.
+  const SHOW_INSTALL_BUTTON = false;
+  const showInstallButton = SHOW_INSTALL_BUTTON && !installed;
 
   return (
     <header className="border-border/80 bg-background/90 sticky top-0 z-40 border-b backdrop-blur-md">
