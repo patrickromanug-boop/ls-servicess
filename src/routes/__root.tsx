@@ -169,7 +169,7 @@ function SitePromoPopup() {
     if (isVisitor) {
       navigate.navigate({ to: "/auth/login", search: { redirect: "/plans?feature=targeted-jobs" } });
     } else {
-      navigate.navigate({ to: "/dashboard" });
+      window.location.assign("/dashboard?tab=services");
     }
   };
 
