@@ -11,6 +11,8 @@ import {
   updateAlertDelivery,
   fetchTargetedJobs,
   type WebSubscription,
+  isTrialActive,
+  trialDaysLeft,
 } from "@/lib/account";
 import { ProfileSection, Card } from "@/components/dashboard/ProfileSection";
 import { PlanSection } from "@/components/dashboard/PlanSection";
@@ -174,6 +176,10 @@ function DashboardPage() {
       <div className="pwa-site-desktop"><Header /></div>
       <MobileAppBar tab={tab} />
       <main className="pwa-dashboard-main mx-auto w-full max-w-5xl flex-1 px-4 py-10 pb-24 md:pb-10">
+        {isTrialActive(sub) && (
+          <TrialBanner daysLeft={trialDaysLeft(sub)} onViewPlans={() => setTab("bill-plans")} />
+        )}
+
         <div className="pwa-dashboard-desktop-only">
           <h1 className="font-display text-2xl font-bold">
             {fullName ? `Welcome back, ${fullName.split(" ")[0]}` : "Your dashboard"}
@@ -276,6 +282,27 @@ function DashboardPage() {
           />
         </div>
       </nav>
+    </div>
+  );
+}
+
+function TrialBanner({ daysLeft, onViewPlans }: { daysLeft: number; onViewPlans: () => void }) {
+  return (
+    <div className="border-brand/25 bg-brand/5 mb-6 flex flex-col gap-4 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+      <div className="flex items-start gap-3">
+        <div className="bg-brand text-brand-foreground grid size-9 shrink-0 place-items-center rounded-full text-sm font-bold">
+          {daysLeft}
+        </div>
+        <div>
+          <p className="text-brand text-sm font-bold">Your free trial is active</p>
+          <p className="text-muted-foreground mt-1 text-xs leading-relaxed">
+            You have {daysLeft} {daysLeft === 1 ? "day" : "days"} left to try targeted jobs, alerts and unlimited document generation. Choose a plan before your trial ends to keep these benefits.
+          </p>
+        </div>
+      </div>
+      <button type="button" onClick={onViewPlans} className="bg-brand text-brand-foreground shrink-0 rounded-lg px-4 py-2.5 text-xs font-bold">
+        View plans
+      </button>
     </div>
   );
 }
