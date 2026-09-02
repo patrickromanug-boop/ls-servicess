@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { ShieldCheck } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { fetchMyRole } from "@/lib/admin";
-import logoAsset from "@/assets/ls-services-logo.png.asset.json";
+import { LOGO_SRC } from "@/lib/constants";
 
 export const Route = createFileRoute("/admin/login")({
   ssr: false,
