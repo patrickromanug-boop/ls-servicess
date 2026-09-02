@@ -204,14 +204,24 @@ export function Header() {
               Sign out
             </button>
           ) : (
-            <Link
-              to="/auth/login" search={{ redirect: undefined }}
-              onClick={() => setOpen(false)}
-              className="bg-brand text-brand-foreground mt-2 block rounded-xl px-3 py-3 text-sm font-bold"
-            >
-              Sign in
-            </Link>
+            <>
+              <Link
+                to="/auth/login" search={{ redirect: undefined }}
+                onClick={() => setOpen(false)}
+                className="border-brand text-brand mt-2 block rounded-xl border px-3 py-3 text-center text-sm font-bold"
+              >
+                Sign in
+              </Link>
+              <Link
+                to="/auth/signup" search={{ redirect: undefined }}
+                onClick={() => setOpen(false)}
+                className="bg-brand text-brand-foreground mt-2 block rounded-xl px-3 py-3 text-center text-sm font-bold"
+              >
+                Create account
+              </Link>
+            </>
           )}
+
         </div>
       )}
     </header>
