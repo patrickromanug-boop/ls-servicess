@@ -167,7 +167,7 @@ function SitePromoPopup() {
   const tryItNow = () => {
     close();
     if (isVisitor) {
-      navigate.navigate({ to: "/auth/login", search: { redirect: "/plans?feature=targeted-jobs" } });
+      navigate.navigate({ to: "/auth/signup", search: { redirect: "/plans?feature=targeted-jobs" } });
     } else {
       window.location.assign("/dashboard?tab=services");
     }
