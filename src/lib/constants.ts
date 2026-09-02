@@ -28,3 +28,6 @@ export const WHATSAPP_DOCUMENT_REQUEST = (documentType: string) =>
     LS_ADMIN_WHATSAPP,
     `Hi, I've just submitted a ${documentType} request — please check the admin dashboard`,
   );
+
+/** Logo lives in public/ so it is served by any host (Vercel, Lovable, self-hosted). */
+export const LOGO_SRC = "/ls-services-logo.png";
