@@ -1,11 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import logoAsset from "@/assets/ls-services-logo.png.asset.json";
+import { LOGO_SRC } from "@/lib/constants";
 
 export function Logo({ className = "" }: { className?: string }) {
   return (
     <Link to="/" className={`flex items-center ${className}`} aria-label="LS Services home">
       <img
-        src={logoAsset.url}
+        src={LOGO_SRC}
         alt="LS Services"
         width={600}
         height={153}
