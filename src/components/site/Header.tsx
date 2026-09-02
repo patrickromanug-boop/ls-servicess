@@ -138,13 +138,22 @@ export function Header() {
               Sign out
             </button>
           ) : (
-            <Link
-              to="/auth/login" search={{ redirect: undefined }}
-              className="bg-brand text-brand-foreground hover:bg-brand/90 ml-3 rounded-full px-4 py-2 text-sm font-bold shadow-sm transition-colors"
-            >
-              Sign in
-            </Link>
+            <>
+              <Link
+                to="/auth/login" search={{ redirect: undefined }}
+                className="border-brand text-brand hover:bg-brand-soft ml-3 rounded-full border px-4 py-2 text-sm font-bold transition-colors"
+              >
+                Sign in
+              </Link>
+              <Link
+                to="/auth/signup" search={{ redirect: undefined }}
+                className="bg-brand text-brand-foreground hover:bg-brand/90 ml-1.5 rounded-full px-4 py-2 text-sm font-bold shadow-sm transition-colors"
+              >
+                Create account
+              </Link>
+            </>
           )}
+
         </nav>
 
         <div className="flex items-center gap-2">
