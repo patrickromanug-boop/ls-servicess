@@ -106,7 +106,7 @@ function JobDetailRoute() {
           <div
             role="dialog"
             aria-modal="true"
-            className="animate-in slide-in-from-bottom-4 relative z-10 max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-2xl bg-background p-6 sm:rounded-2xl"
+            className="fixed inset-x-4 top-[10%] bottom-[10%] mx-auto max-h-[80vh] overflow-y-auto rounded-lg bg-white p-4 shadow-xl sm:max-w-lg"
           >
             <button
               onClick={() => window.history.back()}

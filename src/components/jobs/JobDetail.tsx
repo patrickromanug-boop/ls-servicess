@@ -60,7 +60,7 @@ function BrandLogo({ job }: { job: JobRow }) {
       width={56}
       height={56}
       loading="lazy"
-      className="size-14 shrink-0 rounded-xl border border-border bg-white object-contain"
+      className="size-14 max-w-full shrink-0 rounded-xl border border-border bg-white object-contain"
       onError={() => setFailed(true)}
     />
   );
@@ -133,8 +133,8 @@ export function JobDetail({ job }: { job: JobRow }) {
       <div className="flex items-start gap-3">
         <BrandLogo job={job} />
         <div className="min-w-0 flex-1">
-          <h1 className="text-xl font-bold sm:text-2xl">{job.title}</h1>
-          <p className="text-muted-foreground mt-1 flex items-center gap-1.5 text-sm">
+          <h1 className="break-words whitespace-normal text-xl font-bold sm:text-2xl">{job.title}</h1>
+          <p className="text-muted-foreground mt-1 flex items-center gap-1.5 break-words whitespace-normal text-sm">
             <Building2 className="size-4" />
             {job.organization}
           </p>
@@ -147,7 +147,7 @@ export function JobDetail({ job }: { job: JobRow }) {
         <Chip icon={<Eye className="size-3.5" />} text={`${views} views`} />
         {job.categories?.name && <Chip text={job.categories.name} />}
         <span
-          className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+          className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 break-words whitespace-normal text-xs font-semibold ${
             urgent ? "bg-urgent-soft text-urgent" : "bg-muted text-muted-foreground"
           }`}
         >
@@ -213,12 +213,12 @@ function ApplyProcedure({ job }: { job: JobRow }) {
 
   return (
     <div className="border-brand bg-brand-soft mt-4 rounded-xl border p-4">
-      <p className="text-sm font-semibold">How to apply</p>
+      <p className="break-words whitespace-normal text-sm font-semibold">How to apply</p>
 
       {instructions ? (
-        <p className="text-foreground/80 mt-2 whitespace-pre-line text-sm leading-relaxed">{instructions}</p>
+        <p className="text-foreground/80 mt-2 break-words whitespace-pre-line text-sm leading-relaxed">{instructions}</p>
       ) : (
-        <p className="text-muted-foreground mt-2 text-sm">
+        <p className="text-muted-foreground mt-2 break-words whitespace-normal text-sm">
           {emailOnly
             ? "Follow the email option below to send your application."
             : "Click below to apply on the official site"}
@@ -235,7 +235,7 @@ function ApplyProcedure({ job }: { job: JobRow }) {
             Email your application
           </a>
         ) : (
-          <p className="text-muted-foreground mt-3 text-sm font-medium">
+          <p className="text-muted-foreground mt-3 break-words whitespace-normal text-sm font-medium">
             Contact LS Services for application details
           </p>
         )
@@ -250,7 +250,7 @@ function ApplyProcedure({ job }: { job: JobRow }) {
           <ExternalLink className="size-4" />
         </a>
       ) : (
-        <p className="text-muted-foreground mt-3 text-sm font-medium">
+        <p className="text-muted-foreground mt-3 break-words whitespace-normal text-sm font-medium">
           Contact LS Services for application details
         </p>
       )}
@@ -260,7 +260,7 @@ function ApplyProcedure({ job }: { job: JobRow }) {
 
 function Chip({ icon, text }: { icon?: React.ReactNode; text: string }) {
   return (
-    <span className="bg-muted text-muted-foreground flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium">
+    <span className="bg-muted text-muted-foreground flex max-w-full items-center gap-1.5 rounded-full px-2.5 py-1 break-words whitespace-normal text-xs font-medium">
       {icon}
       {text}
     </span>
@@ -270,8 +270,8 @@ function Chip({ icon, text }: { icon?: React.ReactNode; text: string }) {
 function Section({ title, body }: { title: string; body: string }) {
   return (
     <section className="mt-6">
-      <h2 className="text-sm font-bold uppercase tracking-wide">{title}</h2>
-      <p className="text-foreground/80 mt-2 whitespace-pre-line text-sm leading-relaxed">{body}</p>
+      <h2 className="break-words whitespace-normal text-sm font-bold uppercase tracking-wide">{title}</h2>
+      <p className="text-foreground/80 mt-2 break-words whitespace-pre-line text-sm leading-relaxed">{body}</p>
     </section>
   );
 }
@@ -298,7 +298,7 @@ function ReportForm({ jobId, onClose }: { jobId: string; onClose: () => void }) 
 
   return (
     <form onSubmit={submit} className="border-border mt-4 rounded-xl border p-4">
-      <p className="text-sm font-semibold">Report this job</p>
+      <p className="break-words whitespace-normal text-sm font-semibold">Report this job</p>
       <select
         value={reason}
         onChange={(e) => setReason(e.target.value)}
