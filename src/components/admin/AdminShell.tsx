@@ -15,7 +15,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { myRoleQueryOptions } from "@/lib/admin";
-import logoAsset from "@/assets/ls-services-logo.png.asset.json";
+import { LOGO_SRC } from "@/lib/constants";
 
 const NAV = [
   { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
