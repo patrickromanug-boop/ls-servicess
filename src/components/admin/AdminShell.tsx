@@ -15,7 +15,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { myRoleQueryOptions } from "@/lib/admin";
-import logoAsset from "@/assets/ls-services-logo.png.asset.json";
+import { LOGO_SRC } from "@/lib/constants";
 
 const NAV = [
   { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -44,7 +44,7 @@ export function AdminSidebar() {
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col bg-[#14204F] px-4 py-6 text-white/80 lg:flex">
       <div className="flex flex-col gap-2 px-2">
         <span className="inline-flex w-fit rounded-lg bg-white px-2.5 py-2">
-          <img src={logoAsset.url} alt="LS Services" className="h-7 w-auto" />
+          <img src={LOGO_SRC} alt="LS Services" className="h-7 w-auto" />
         </span>
         <span className="text-accent-orange text-[11px] font-bold tracking-[0.18em] uppercase">
           Admin portal
