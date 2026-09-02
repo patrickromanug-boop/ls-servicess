@@ -59,10 +59,19 @@ export function JobCard({ job }: { job: JobRow }) {
         <BrandLogo job={job} />
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-base font-bold transition-colors group-hover:text-brand">{job.title}</h3>
-          <p className="text-muted-foreground mt-0.5 flex items-center gap-1.5 truncate text-sm">
-            <Building2 className="size-3.5 shrink-0" />
-            {job.organization}
-          </p>
+          <div className="flex items-center justify-between gap-2 w-full">
+            <p className="text-muted-foreground mt-0.5 flex flex-1 min-w-0 items-center gap-1.5 truncate text-sm">
+              <Building2 className="size-3.5 shrink-0" />
+              {job.organization}
+            </p>
+            <span
+              className={`flex-shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                urgent ? "bg-urgent-soft text-urgent" : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {deadlineLabel(days)}
+            </span>
+          </div>
 
           <div className="text-muted-foreground mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border/70 pt-3 text-xs">
             <span className="flex items-center gap-1.5">
@@ -79,13 +88,6 @@ export function JobCard({ job }: { job: JobRow }) {
             </span>
           </div>
         </div>
-        <span
-          className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-            urgent ? "bg-urgent-soft text-urgent" : "bg-muted text-muted-foreground"
-          }`}
-        >
-          {deadlineLabel(days)}
-        </span>
       </div>
     </Link>
   );
