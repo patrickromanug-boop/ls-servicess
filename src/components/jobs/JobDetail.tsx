@@ -106,7 +106,7 @@ export function JobDetail({ job }: { job: JobRow }) {
   function handleApply() {
     if (loading) return;
     if (!user) {
-      navigate({ to: "/auth/login", search: { redirect: path } });
+      navigate({ to: "/auth/signup", search: { redirect: path } });
       return;
     }
     setApplyOpen((v) => !v);

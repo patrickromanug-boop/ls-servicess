@@ -149,7 +149,7 @@ export function Header() {
                 to="/auth/signup" search={{ redirect: undefined }}
                 className="bg-brand text-brand-foreground hover:bg-brand/90 ml-1.5 rounded-full px-4 py-2 text-sm font-bold shadow-sm transition-colors"
               >
-                Create account
+                Sign up
               </Link>
             </>
           )}
@@ -217,7 +217,7 @@ export function Header() {
                 onClick={() => setOpen(false)}
                 className="bg-brand text-brand-foreground mt-2 block rounded-xl px-3 py-3 text-center text-sm font-bold"
               >
-                Create account
+                Sign up
               </Link>
             </>
           )}
