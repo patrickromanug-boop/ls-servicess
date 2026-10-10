@@ -146,11 +146,11 @@ function SignupPage() {
             />
             <span>
               I agree to the{" "}
-              <Link to="/terms" className="text-brand font-semibold">
+              <Link to="/terms" target="_blank" rel="noopener noreferrer" className="text-brand font-semibold">
                 Terms &amp; Conditions
               </Link>{" "}
               and{" "}
-              <Link to="/privacy" className="text-brand font-semibold">
+              <Link to="/privacy" target="_blank" rel="noopener noreferrer" className="text-brand font-semibold">
                 Privacy Policy
               </Link>
             </span>
