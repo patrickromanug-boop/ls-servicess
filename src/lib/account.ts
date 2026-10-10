@@ -3,6 +3,7 @@ import { supabase } from "./supabase";
 import type { BillingCycle, DocumentType, Tier } from "./plans";
 import { planByTier, formatUgx } from "./plans";
 import { BASE_COLUMNS, APPLY_COLUMNS, todayISO, type JobRow } from "./jobs";
+import { clearDashboardWelcome } from "./welcome";
 
 export type WebSubscription = {
   id: string;
@@ -255,9 +256,14 @@ export async function attachDocumentPdf(id: string, pdfUrl: string) {
 
 /** Hard delete: removes every app row for this user, then signs them out. */
 export async function deleteAccount() {
+  const { data: me } = await supabase.auth.getUser();
+  const userId = me.user?.id;
+
   const { error } = await supabase.rpc("web_delete_account");
   if (error) throw error;
   await supabase.auth.signOut();
+
+  if (userId) clearDashboardWelcome(userId);
 }
 
 export const subscriptionQueryOptions = () =>
