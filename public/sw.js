@@ -1,12 +1,13 @@
-const CACHE_NAME = 'ls-services-v2';
+const CACHE_NAME = 'ls-services-v3';
 const APP_SHELL_URLS = [
-  '/',
-  '/dashboard',
-  '/jobs',
-  '/manifest.webmanifest'
+  '/manifest.webmanifest',
+  '/favicon.png',
+  '/ls-services-logo.png'
 ];
 
-// Install – cache app shell
+// Install – cache only small static assets, never HTML pages.
+// Caching HTML caused the "This page didn't load" error: after each deploy the
+// cached page referenced old hashed JS files that no longer exist.
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
@@ -16,7 +17,6 @@ self.addEventListener('install', (event) => {
             const response = await fetch(url, { cache: 'no-store' });
             if (response.ok) await cache.put(url, response);
           } catch (error) {
-            // A single unavailable route must not abort PWA installation.
             console.warn('Optional app shell asset was not cached:', url, error);
           }
         })
@@ -38,22 +38,31 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch – network first, fallback to cache
+// Fetch strategy:
+// - Page navigations (HTML): always go to the network, never serve cached HTML.
+// - Static assets (JS/CSS/images): network first, cache as an offline fallback.
 self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  if (request.method !== 'GET') return;
+
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
+
+  // Never cache HTML pages – a stale page breaks after every new deploy.
+  if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
   event.respondWith(
-    fetch(event.request)
+    fetch(request)
       .then((response) => {
-        // Cache successful GET responses
-        if (event.request.method === 'GET' && response.ok && new URL(event.request.url).origin === self.location.origin) {
+        if (response.ok) {
           const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
         }
         return response;
       })
-      .catch(() => {
-        return caches.match(event.request).then((cached) => {
-          return cached || caches.match('/');
-        });
-      })
+      .catch(() => caches.match(request))
   );
 });
