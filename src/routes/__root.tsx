@@ -206,6 +206,32 @@ function SitePromoPopup() {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  // If a stale cached page tries to load a script chunk that no longer exists
+  // after a deploy, reload once to fetch the fresh page instead of showing
+  // the error screen.
+  useEffect(() => {
+    const RELOAD_KEY = "ls-chunk-reload";
+    const onError = (event: PromiseRejectionEvent | ErrorEvent) => {
+      const message = String(
+        "reason" in event ? event.reason : event.message ?? event.error,
+      );
+      const isChunkError =
+        message.includes("Failed to fetch dynamically imported module") ||
+        message.includes("ChunkLoadError") ||
+        message.includes("Importing a module script failed");
+      if (!isChunkError) return;
+      if (window.sessionStorage.getItem(RELOAD_KEY) === "1") return;
+      window.sessionStorage.setItem(RELOAD_KEY, "1");
+      window.location.reload();
+    };
+    window.addEventListener("unhandledrejection", onError);
+    window.addEventListener("error", onError);
+    return () => {
+      window.removeEventListener("unhandledrejection", onError);
+      window.removeEventListener("error", onError);
+    };
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
