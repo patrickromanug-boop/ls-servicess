@@ -3,6 +3,7 @@ import { supabase } from "./supabase";
 import type { BillingCycle, DocumentType, Tier } from "./plans";
 import { planByTier, formatUgx } from "./plans";
 import { BASE_COLUMNS, APPLY_COLUMNS, todayISO, type JobRow } from "./jobs";
+import { clearDashboardWelcome } from "./welcome";
 
 export type WebSubscription = {
   id: string;
