@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Header } from "@/components/site/Header";
@@ -14,6 +14,10 @@ import {
   isTrialActive,
   trialDaysLeft,
 } from "@/lib/account";
+import {
+  hasSeenDashboardWelcome,
+  markDashboardWelcomeSeen,
+} from "@/lib/welcome";
 import { ProfileSection, Card } from "@/components/dashboard/ProfileSection";
 import { PlanSection } from "@/components/dashboard/PlanSection";
 import { BillingSection } from "@/components/dashboard/BillingSection";
@@ -116,11 +120,24 @@ function DashboardPage() {
   );
   const [enableAlertsAfterProfileSave, setEnableAlertsAfterProfileSave] = useState(false);
 
+  // "Welcome" for someone who has just registered, "Welcome back" for everyone
+  // who has been here before. Decided once per user id so switching tabs or
+  // re-rendering mid-session never flips the greeting underneath them.
+  const welcomeRef = useRef<{ key: string; fresh: boolean } | null>(null);
+  if (user && welcomeRef.current?.key !== user.id) {
+    welcomeRef.current = { key: user.id, fresh: !hasSeenDashboardWelcome(user.id) };
+  }
+  const isFreshWelcome = welcomeRef.current?.fresh ?? false;
+
   useEffect(() => {
     if (!loading && !user) {
       navigate({ to: "/auth/login", search: { redirect: "/dashboard" }, replace: true });
     }
   }, [loading, user, navigate]);
+
+  useEffect(() => {
+    if (user) markDashboardWelcomeSeen(user.id);
+  }, [user?.id]);
 
   const subQuery = useQuery({
     ...subscriptionQueryOptions(),
@@ -185,7 +202,11 @@ function DashboardPage() {
 
         <div className="pwa-dashboard-desktop-only">
           <h1 className="font-display text-2xl font-bold">
-            {fullName ? `Welcome back, ${fullName.split(" ")[0]}` : "Your dashboard"}
+            {fullName
+              ? `${isFreshWelcome ? "Welcome" : "Welcome back"}, ${fullName.split(" ")[0]}`
+              : isFreshWelcome
+                ? "Welcome to LS Services"
+                : "Your dashboard"}
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">
             Manage your plan, preferences and documents in one place.
