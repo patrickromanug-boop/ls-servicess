@@ -9,6 +9,8 @@ import { useAuth } from "@/lib/auth";
 import { PlanSelector } from "@/components/plans/PlanSelector";
 import {
   ensureWebSubscription,
+  startTrial,
+  isTrialNotStarted,
   isTrialActive,
   requestPlan,
   subscriptionQueryOptions,
@@ -62,12 +64,15 @@ function PlansPage() {
 
   const sub = subQuery.data ?? null;
   const trialing = isTrialActive(sub);
+  const trialPending = isTrialNotStarted(sub);
   const usedTrialBefore = !!sub && sub.status === "expired" && !sub.tier;
 
   async function choose(tier: Tier, cycle: BillingCycle) {
     setBusy(tier);
     try {
+      await startTrial();
       await requestPlan(tier, cycle);
+      await qc.invalidateQueries({ queryKey: ["web_subscription"] });
       toast.success(
         "Request submitted — we'll confirm your payment and activate your plan shortly."
       );
@@ -91,6 +96,11 @@ function PlansPage() {
             <p className="bg-accent-orange/10 text-accent-orange mx-auto mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold">
               <Info className="size-4" />
               It looks like you&apos;ve used a free trial before — choose a plan to continue
+            </p>
+          ) : trialPending ? (
+            <p className="bg-brand/10 text-brand mx-auto mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold">
+              <Sparkles className="size-4" />
+              Your 9-day free trial starts the moment you pick a plan — nothing is charged today
             </p>
           ) : trialing ? (
             <p className="text-muted-foreground mx-auto mt-3 max-w-xl text-sm">

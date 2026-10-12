@@ -89,6 +89,18 @@ export async function selectPlan(tier: Tier, cycle: BillingCycle): Promise<WebSu
   return data as WebSubscription;
 }
 
+/** Starts the 9-day trial clock (only the first time a plan is picked). */
+export async function startTrial(): Promise<WebSubscription> {
+  const { data, error } = await supabase.rpc("web_start_trial");
+  if (error) throw rpcError(error);
+  return data as WebSubscription;
+}
+
+/** Trial row exists but the user hasn't picked a plan yet, so the clock hasn't started. */
+export function isTrialNotStarted(sub: WebSubscription | null) {
+  return !!sub && sub.status === "trial" && !sub.trial_ends_at;
+}
+
 /** Create a pending plan request instead of activating immediately. */
 export async function requestPlan(tier: Tier, cycle: BillingCycle): Promise<PlanRequestRow> {
   const { data, error } = await supabase.rpc("web_request_plan", {
