@@ -167,7 +167,7 @@ function DashboardPage() {
   }
 
   const sub = subQuery.data ?? null;
-  const hasActivePlan = sub && (sub.status === "trial" || sub.status === "active");
+  const hasActivePlan = sub && (isTrialActive(sub) || sub.status === "active");
   const tabs = buildTabs(!!hasActivePlan);
 
   const fullName =
